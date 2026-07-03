@@ -282,9 +282,9 @@ function Work({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opts?: 
             <Ed edit={edit} value={w.name} apply={(c, v) => { c.work[i].name = v }} className="rm-item-org" placeholder="Company" />
             {show(opts?.showLocation) && (edit || w.location) ? <Ed edit={edit} value={w.location} apply={(c, v) => { c.work[i].location = v }} className="rm-item-loc" placeholder="Location" /> : null}
           </div>
-          {show(opts?.showSummary) && has(w.summary) ? (
+          {show(opts?.showSummary) && (edit || has(w.summary)) ? (
             <div className="rm-item-summary">
-              <Ed edit={edit} value={w.summary} rich multiline as="div" apply={(c, v) => { c.work[i].summary = v }} placeholder="" />
+              <Ed edit={edit} value={w.summary} rich multiline as="div" apply={(c, v) => { c.work[i].summary = v }} placeholder="One-line role summary…" />
             </div>
           ) : null}
           {show(opts?.showBullets) ? (
