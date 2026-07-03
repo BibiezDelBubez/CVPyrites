@@ -19,6 +19,7 @@ export const STANDARD_SECTIONS = [
   'volunteer',
   'interests',
   'references',
+  'closingStatement',
 ] as const
 
 export type SectionKey = (typeof STANDARD_SECTIONS)[number] | string // custom-* ids allowed

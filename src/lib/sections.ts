@@ -58,7 +58,7 @@ export function newItem(sectionKey: string): AnyItem {
 
 /** Append a blank item to the right content array for a section key (standard or custom). */
 export function pushNewItem(content: ResumeContent, sectionKey: string): void {
-  if (sectionKey === 'summary') return
+  if (sectionKey === 'summary' || sectionKey === 'closingStatement') return
   const item = newItem(sectionKey)
   if (sectionKey.startsWith('custom-')) {
     const id = sectionKey.slice('custom-'.length)
@@ -86,6 +86,7 @@ export const BODY_SECTION_KEYS = [
   'volunteer',
   'interests',
   'references',
+  'closingStatement',
 ] as const
 
 export const DEFAULT_LABELS: Record<string, string> = {
@@ -101,6 +102,7 @@ export const DEFAULT_LABELS: Record<string, string> = {
   volunteer: 'Volunteering',
   interests: 'Interests',
   references: 'References',
+  closingStatement: 'Closing Statement',
 }
 
 /** Icon hint per section (lucide icon name resolved in the editor). */
@@ -117,6 +119,7 @@ export const SECTION_ICONS: Record<string, string> = {
   volunteer: 'HeartHandshake',
   interests: 'Sparkles',
   references: 'Quote',
+  closingStatement: 'FileSignature',
 }
 
 const has = (s?: string) => !!s && htmlToText(s).length > 0
@@ -165,6 +168,8 @@ export function sectionHasContent(key: string, content: ResumeContent): boolean 
       return content.interests.length > 0
     case 'references':
       return content.references.length > 0
+    case 'closingStatement':
+      return has(content.closingStatement.statement)
     default:
       if (key.startsWith('custom-')) {
         const id = key.slice('custom-'.length)

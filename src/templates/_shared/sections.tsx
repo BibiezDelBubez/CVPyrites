@@ -6,10 +6,12 @@
  * print/thumbnail stay clean.
  */
 import { useEffect, useRef, type ReactNode, type FocusEvent } from 'react'
+import { X } from 'lucide-react'
 import type { ResumeDocument } from '@/types/document'
 import type { TemplateConfig } from '@/types/template'
 import { formatDateRange, formatDate, htmlToText, safeHref } from '@/lib/utils'
 import { pushNewItem, ADD_LABEL } from '@/lib/sections'
+import { downscaleDataUrl } from '@/lib/image'
 import { Chips, Dots, LevelBar, Stars, RichText, prettyUrl } from './atoms'
 import { Ed, type EditFn } from './Editable'
 import { CanvasDate } from './CanvasDate'
@@ -573,6 +575,83 @@ function References({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
   )
 }
 
+/** A signature image: click to upload (edit mode) / plain <img> (print). Mirrors
+ *  the profile-photo picker's file→data-URL flow (BasicsEditor.tsx), minus the
+ *  circular crop step — a signature scan shouldn't be square-cropped. */
+function CanvasSignature({ value, edit }: { value: string; edit?: EditFn }) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  if (!edit) return has(value) ? <img src={value} alt="Signature" className="rm-signature-img" /> : null
+
+  const onFile = (file?: File) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const dataUrl = await downscaleDataUrl(String(reader.result), 320)
+      edit((c) => { c.closingStatement.signature = dataUrl })
+    }
+    reader.readAsDataURL(file)
+  }
+
+  return (
+    <span className="rm-signature-edit no-print" contentEditable={false}>
+      {has(value) ? (
+        <>
+          <img src={value} alt="Signature" className="rm-signature-img" />
+          <button
+            type="button"
+            className="rm-signature-clear"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => edit((c) => { c.closingStatement.signature = '' })}
+            aria-label="Remove signature"
+            title="Remove signature"
+          >
+            <X />
+          </button>
+        </>
+      ) : (
+        <button type="button" className="rm-add-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => inputRef.current?.click()}>
+          + Add signature
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+    </span>
+  )
+}
+
+/** Closing/GDPR-style declaration block, e.g. the Italian "autorizzo il
+ *  trattamento dei dati personali" liberatoria — a single statement plus an
+ *  optional place/date/signature line. Mirrors the Summary + References idiom:
+ *  one rich-text block (edit-bypassed like Summary) and a muted meta line of
+ *  plain fields (edit-bypassed like Location/Project description). */
+function ClosingStatement({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
+  const cs = doc.content.closingStatement
+  return (
+    <div className="rm-item">
+      {edit || has(cs.statement) ? (
+        <div className="rm-item-summary">
+          <Ed
+            edit={edit}
+            value={cs.statement}
+            rich
+            multiline
+            as="div"
+            apply={(c, v) => { c.closingStatement.statement = v }}
+            placeholder="Autorizzo il trattamento dei miei dati personali presenti nel CV ai sensi dell'art. 13 del GDPR (Regolamento UE 2016/679)."
+          />
+        </div>
+      ) : null}
+      {edit || cs.place || cs.date || cs.signature ? (
+        <div className="rm-item-sub">
+          {edit || cs.place ? <Ed edit={edit} value={cs.place} apply={(c, v) => { c.closingStatement.place = v }} className="rm-item-loc" placeholder="Place" /> : null}
+          {edit || cs.date ? <Ed edit={edit} value={cs.date} apply={(c, v) => { c.closingStatement.date = v }} className="rm-item-loc" placeholder="Date" /> : null}
+        </div>
+      ) : null}
+      {edit || has(cs.signature) ? <CanvasSignature value={cs.signature} edit={edit} /> : null}
+    </div>
+  )
+}
+
 function Custom({ doc, sectionKey, edit, opts }: { doc: ResumeDocument; sectionKey: string; edit?: EditFn; opts?: SecOpts }) {
   const id = sectionKey.slice('custom-'.length)
   const secIndex = doc.content.custom.findIndex((c) => c.id === id)
@@ -657,6 +736,8 @@ function sectionRenderer(sectionKey: string, doc: ResumeDocument, config: Templa
       return <Interests doc={doc} edit={edit} />
     case 'references':
       return <References doc={doc} edit={edit} />
+    case 'closingStatement':
+      return <ClosingStatement doc={doc} edit={edit} />
     default:
       if (sectionKey.startsWith('custom-')) return <Custom doc={doc} sectionKey={sectionKey} edit={edit} opts={opts} />
       return null
@@ -667,9 +748,10 @@ function sectionRenderer(sectionKey: string, doc: ResumeDocument, config: Templa
 export function SectionBody({ sectionKey, doc, config, edit }: { sectionKey: string; doc: ResumeDocument; config: TemplateConfig; edit?: EditFn }) {
   const opts: SecOpts = doc.metadata.layout.sectionSettings?.[sectionKey] ?? {}
   const body = sectionRenderer(sectionKey, doc, config, edit, opts)
-  // Summary is a single field (always editable); every other section is a list,
-  // so offer an inline "+ Add" affordance on the canvas (edit mode only).
-  const canAdd = !!edit && sectionKey !== 'summary'
+  // Summary and Closing Statement are single fields (always editable); every
+  // other section is a list, so offer an inline "+ Add" affordance on the
+  // canvas (edit mode only).
+  const canAdd = !!edit && sectionKey !== 'summary' && sectionKey !== 'closingStatement'
   if (!canAdd) return body
   return (
     <>

@@ -6,6 +6,7 @@ import {
   AwardSchema,
   BasicsSchema,
   CertificateSchema,
+  ClosingStatementSchema,
   CustomSectionSchema,
   EducationSchema,
   InterestSchema,
@@ -35,6 +36,8 @@ export const ResumeContentSchema = z.object({
   projects: z.array(ProjectSchema).default([]),
   /** CVAurum extension: free-form custom sections */
   custom: z.array(CustomSectionSchema).default([]),
+  /** CVAurum extension: closing/GDPR-style declaration block */
+  closingStatement: ClosingStatementSchema.default({}),
 })
 
 export type ResumeContent = z.infer<typeof ResumeContentSchema>

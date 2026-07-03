@@ -102,6 +102,7 @@ export const SAMPLE_CONTENT: ResumeContent = {
     },
   ],
   custom: [],
+  closingStatement: { statement: '', place: '', date: '', signature: '' },
 }
 
 /** A blank-but-valid resume for "Start from scratch". */
@@ -129,4 +130,5 @@ export const BLANK_CONTENT: ResumeContent = {
   references: [],
   projects: [],
   custom: [],
+  closingStatement: { statement: '', place: '', date: '', signature: '' },
 }

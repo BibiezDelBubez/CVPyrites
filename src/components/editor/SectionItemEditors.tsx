@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { GripVertical, Trash2, Plus, ChevronDown } from 'lucide-react'
+import { GripVertical, Trash2, Plus, ChevronDown, ImagePlus, X } from 'lucide-react'
 import { useResumeStore } from '@/store/useResumeStore'
 import type { ResumeContent, ResumeDocument } from '@/types/document'
 import { cn } from '@/lib/utils'
 import { newItem, ADD_LABEL } from '@/lib/sections'
+import { downscaleDataUrl } from '@/lib/image'
 import { SortableList } from './SortableList'
 import { TextField, TextAreaField, DateField, TagInput, RatingField, Row, Labeled } from './fields/Inputs'
 import { RichTextEditor } from './fields/RichTextEditor'
@@ -75,6 +76,7 @@ export function SectionItemsEditor({ doc, sectionKey }: { doc: ResumeDocument; s
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   if (sectionKey === 'summary') return <SummaryEditor doc={doc} />
+  if (sectionKey === 'closingStatement') return <ClosingStatementEditor doc={doc} />
 
   const isCustom = sectionKey.startsWith('custom-')
   const customId = isCustom ? sectionKey.slice('custom-'.length) : null
@@ -188,6 +190,66 @@ function SummaryEditor({ doc }: { doc: ResumeDocument }) {
       placeholder="2–3 punchy lines: who you are, your strongest skills, and the impact you bring…"
       minHeight={110}
     />
+  )
+}
+
+function ClosingStatementEditor({ doc }: { doc: ResumeDocument }) {
+  const update = useResumeStore((s) => s.updateContent)
+  const cs = doc.content.closingStatement
+  const set = (key: 'place' | 'date' | 'signature') => (v: string) => update((c) => { c.closingStatement[key] = v })
+  return (
+    <div className="space-y-3">
+      <Labeled label="Statement">
+        <RichTextEditor
+          value={cs.statement ?? ''}
+          onChange={(v) => update((c) => { c.closingStatement.statement = v })}
+          placeholder="Autorizzo il trattamento dei miei dati personali presenti nel CV ai sensi dell'art. 13 del GDPR (Regolamento UE 2016/679)."
+          minHeight={80}
+        />
+      </Labeled>
+      <Row>
+        <TextField label="Place" value={cs.place ?? ''} onChange={set('place')} placeholder="Veroli" />
+        <TextField label="Date" value={cs.date ?? ''} onChange={set('date')} placeholder="01/08/2026" />
+      </Row>
+      <Labeled label="Signature">
+        <SignaturePicker image={cs.signature} onPick={set('signature')} />
+      </Labeled>
+    </div>
+  )
+}
+
+/** Upload a signature scan/photo. Mirrors the profile-photo PhotoPicker's
+ *  file→data-URL flow, minus the circular crop — a signature shouldn't be
+ *  square-cropped. */
+function SignaturePicker({ image, onPick }: { image?: string; onPick: (v: string) => void }) {
+  const onFile = (file?: File) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async () => onPick(await downscaleDataUrl(String(reader.result), 320))
+    reader.readAsDataURL(file)
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <label
+        className="group relative flex h-14 w-28 cursor-pointer items-center justify-center overflow-hidden rounded-md border-2 border-dashed border-input bg-muted text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+        title="Upload a signature"
+      >
+        {image ? (
+          <img src={image} alt="Signature" className="h-full w-full object-contain p-1" />
+        ) : (
+          <div className="flex flex-col items-center gap-0.5">
+            <ImagePlus className="h-4 w-4" />
+            <span className="text-[10px] font-medium">Add signature</span>
+          </div>
+        )}
+        <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
+      </label>
+      {image && (
+        <button type="button" className="btn-icon h-7 w-7" onClick={() => onPick('')} aria-label="Remove signature">
+          <X className="h-4 w-4" />
+        </button>
+      )}
+    </div>
   )
 }
 

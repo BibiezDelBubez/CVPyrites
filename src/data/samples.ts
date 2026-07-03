@@ -33,6 +33,7 @@ function persona(over: Partial<ResumeContent> & { basics: ResumeContent['basics'
     references: [],
     projects: [],
     custom: [],
+    closingStatement: { statement: '', place: '', date: '', signature: '' },
     ...over,
   }
 }

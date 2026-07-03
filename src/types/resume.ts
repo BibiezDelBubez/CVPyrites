@@ -136,6 +136,17 @@ export const ReferenceSchema = z.object({
   reference: z.string().optional().default(''),
 })
 
+/** Closing/GDPR-style declaration block (CVAurum extension), e.g. the Italian
+ *  "autorizzo il trattamento dei dati personali" liberatoria — a single free-text
+ *  statement plus the place/date/signature line often appended below it. */
+export const ClosingStatementSchema = z.object({
+  statement: z.string().optional().default(''),
+  place: z.string().optional().default(''),
+  date: z.string().optional().default(''),
+  /** Signature image as a data URL (uploaded photo/scan), like `basics.image`. */
+  signature: z.string().optional().default(''),
+})
+
 export const VolunteerSchema = z.object({
   id: z.string().optional(),
   organization: z.string().optional().default(''),
@@ -181,5 +192,6 @@ export type Language = z.infer<typeof LanguageSchema>
 export type Interest = z.infer<typeof InterestSchema>
 export type Reference = z.infer<typeof ReferenceSchema>
 export type Volunteer = z.infer<typeof VolunteerSchema>
+export type ClosingStatement = z.infer<typeof ClosingStatementSchema>
 export type CustomItem = z.infer<typeof CustomItemSchema>
 export type CustomSection = z.infer<typeof CustomSectionSchema>

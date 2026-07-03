@@ -584,6 +584,7 @@ const BLANK = (): ResumeContent => ({
   basics: { name: '', label: '', image: '', email: '', phone: '', url: '', summary: '', location: {}, profiles: [] },
   work: [], volunteer: [], education: [], awards: [], certificates: [], publications: [],
   skills: [], languages: [], interests: [], references: [], projects: [], custom: [],
+  closingStatement: { statement: '', place: '', date: '', signature: '' },
 })
 
 export function parseLayout(g: LayoutGraph): ImportResult {

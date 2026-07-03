@@ -287,6 +287,16 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
         if (r.name) out.push(new Paragraph({ spacing: { after: 4 }, children: [new TextRun({ text: r.name, bold: true, color: C.body, size: SIZE.body })] }))
         if (r.reference) out.push(sub(r.reference, C))
       }
+    } else if (key === 'closingStatement') {
+      const cs = content.closingStatement
+      if (!has(cs.statement)) continue
+      out.push(heading(label, C), ...summaryParas(cs.statement!, C))
+      const meta = [cs.place, cs.date].filter(Boolean).join('   ·   ')
+      if (meta) out.push(sub(meta, C))
+      const sig = decodePhoto(cs.signature)
+      if (sig) {
+        out.push(new Paragraph({ spacing: { before: 60, after: 30 }, children: [new ImageRun({ data: sig.data, type: sig.type, transformation: { width: 130, height: 46 } })] }))
+      }
     } else if (key.startsWith('custom-')) {
       const id = key.slice('custom-'.length)
       const section = content.custom.find((c) => c.id === id)

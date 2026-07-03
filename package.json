@@ -1,18 +1,18 @@
 {
-  "name": "cvaurum",
+  "name": "cvpyrites",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "CVAurum — the open-source resume studio. Beautiful, ATS-ready resumes, 100% local and private. No account, no server, no tracking.",
+  "description": "CVPyrites — a CVAurum fork tailored for the Italian job market (GDPR-style closing statement, and more). Beautiful, ATS-ready resumes, 100% local and private. No account, no server, no tracking.",
   "license": "MIT",
-  "author": "akhil-dara",
-  "homepage": "https://github.com/akhil-dara/cvaurum#readme",
+  "author": "BibiezDelBubez (fork of CVAurum by akhil-dara)",
+  "homepage": "https://github.com/BibiezDelBubez/CVPyrites#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/akhil-dara/cvaurum.git"
+    "url": "git+https://github.com/BibiezDelBubez/CVPyrites.git"
   },
   "bugs": {
-    "url": "https://github.com/akhil-dara/cvaurum/issues"
+    "url": "https://github.com/BibiezDelBubez/CVPyrites/issues"
   },
   "keywords": [
     "resume",

@@ -14,6 +14,7 @@ import {
   Sparkles,
   Quote,
   Folder,
+  FileSignature,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -30,6 +31,7 @@ const MAP: Record<string, LucideIcon> = {
   volunteer: HeartHandshake,
   interests: Sparkles,
   references: Quote,
+  closingStatement: FileSignature,
 }
 
 export function sectionIconFor(key: string): LucideIcon {

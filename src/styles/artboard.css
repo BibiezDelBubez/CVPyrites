@@ -575,6 +575,44 @@
   opacity: 1;
 }
 
+/* Signature image (Closing Statement). */
+.rm-signature-img {
+  display: block;
+  max-height: 2.6em;
+  max-width: 11em;
+  object-fit: contain;
+  object-position: left center;
+}
+.rm-signature-edit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.3em;
+}
+.rm-signature-clear {
+  position: absolute;
+  top: -0.5em;
+  right: -0.5em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 999px;
+  background: hsl(var(--danger));
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.rm-signature-clear svg {
+  width: 0.75em;
+  height: 0.75em;
+}
+.mode-preview .rm-signature-edit:hover .rm-signature-clear {
+  opacity: 1;
+}
+
 /* Editable skill chips on the canvas (editable preview only). */
 .mode-preview .rm-chips-edit {
   align-items: center;

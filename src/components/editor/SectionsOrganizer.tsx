@@ -24,6 +24,7 @@ const iconFor = sectionIconFor
 
 function countItems(doc: ResumeDocument, key: string): number {
   if (key === 'summary') return doc.content.basics.summary ? 1 : 0
+  if (key === 'closingStatement') return doc.content.closingStatement.statement ? 1 : 0
   if (key.startsWith('custom-')) {
     const id = key.slice('custom-'.length)
     return doc.content.custom.find((c) => c.id === id)?.items.length ?? 0
