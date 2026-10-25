@@ -10,7 +10,7 @@ export function InstallButton({ className = 'btn-outline btn-sm' }: { className?
   const { canInstall, promptInstall } = useInstallPrompt()
   if (!canInstall) return null
   return (
-    <button className={className} onClick={promptInstall} title="Install CVAurum as an app">
+    <button className={className} onClick={promptInstall} title="Install CVPyrites as an app">
       <Download className="h-4 w-4" /> Install app
     </button>
   )

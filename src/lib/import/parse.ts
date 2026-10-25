@@ -1,5 +1,5 @@
 /**
- * Deterministic, GenAI-free field extraction over the layout graph → CVAurum's
+ * Deterministic, GenAI-free field extraction over the layout graph → CVPyrites's
  * ResumeContent. v1 targets clean single/standard-column resumes: header
  * (name + international contacts + links), Summary, Experience, Education,
  * Skills, Projects. Every field is regex/lexicon/geometry-derived — no network,
@@ -17,7 +17,25 @@ import type { Line, LayoutGraph } from './layoutGraph'
 // NB: inter-word gaps use \s* (not \s+) because some PDFs drop the space between
 // words on extraction ("WORK EXPERIENCE" → "WORKEXPERIENCE", "TECHNICAL SKILLS"
 // → "TECHNICALSKILLS"); headings must still be recognised.
+// CVPyrites: Italian / Europass headings. Listed before the English ones, and
+// languages before skills, so "Competenze linguistiche" lands in Lingue.
+const HEAD_PHRASES_IT: { key: string; re: RegExp }[] = [
+  { key: 'languages', re: /^(lingue(\s*straniere)?|competenze\s*linguistiche|conoscenze?\s*linguistiche|conoscenza\s*(delle\s*)?lingue|lingua\s*madre|madrelingua|altre\s*lingue)\b/i },
+  { key: 'closingStatement', re: /^(trattamento\s*(dei\s*)?dati(\s*personali)?|autorizzazione\s*al\s*trattamento.*|consenso(\s*al\s*trattamento.*)?|privacy)\b/i },
+  { key: 'work', re: /^(esperienz[ae](\s*(lavorativ[ae]|professional[ei]))?|percorso\s*professionale|occupazion[ei]|carriera)\b/i },
+  { key: 'education', re: /^(istruzione(\s*e\s*formazione)?|formazione(\s*(accademica|scolastica))?|titol[oi]\s*di\s*studio|percorso\s*(di\s*studi|formativo|accademico)|studi)\b/i },
+  { key: 'skills', re: /^(competenze(\s*(tecniche|professionali|personali|digitali|informatiche|trasversali|chiave|organizzative|comunicative))?|capacit[àa]\s*e\s*competenze.*|conoscenze(\s*(tecniche|informatiche))?|abilit[àa])\b/i },
+  { key: 'projects', re: /^(progett[oi](\s*(personali|principali|rilevanti))?)\b/i },
+  { key: 'certificates', re: /^(certificazion[ei]|attestati|corsi(\s*e\s*certificazioni)?|abilitazion[ei])\b/i },
+  { key: 'awards', re: /^(premi(\s*e\s*riconoscimenti)?|riconosciment[oi])\b/i },
+  { key: 'publications', re: /^(pubblicazion[ei])\b/i },
+  { key: 'volunteer', re: /^(volontariato|attivit[àa]\s*di\s*volontariato)\b/i },
+  { key: 'interests', re: /^(interessi|hobby|passioni|tempo\s*libero)\b/i },
+  { key: 'summary', re: /^(profilo(\s*(professionale|personale))?|sommario|presentazione|chi\s*sono|su\s*di\s*me|obiettiv[oi](\s*professional[ei])?)\b/i },
+]
+
 const HEAD_PHRASES: { key: string; re: RegExp }[] = [
+  ...HEAD_PHRASES_IT,
   { key: 'work', re: /^(work\s*experience|professional\s*experience|employment(\s*history)?|work\s*history|experience|career(\s*history)?)\b/i },
   { key: 'education', re: /^(education|academic\b.*|qualifications?)\b/i },
   { key: 'skills', re: /^(technical\s*skills|core\s*(skills|competenc\w*)|key\s*skills|skills(\s*[,&].*)?|technolog\w*|tech(nical)?\s*stack|expertise|areas\s*of\s*expertise|competenc\w*|proficienc\w*)\b/i },
@@ -40,6 +58,12 @@ interface Section {
 // Contained-keyword fallback for short heading-like lines whose keyword isn't at
 // the very start ("Relevant Experience", "Core Competencies", "Areas of Expertise").
 const CONTAIN_KEYWORDS: { key: string; re: RegExp }[] = [
+  // CVPyrites: Italian, languages first ("Competenze linguistiche")
+  { key: 'languages', re: /\b(lingue|linguistich\w*)\b/i },
+  { key: 'work', re: /\besperienz\w*\b/i },
+  { key: 'education', re: /\b(istruzione|formazione)\b/i },
+  { key: 'skills', re: /\b(competenze|capacit[àa])/i },
+  { key: 'certificates', re: /\b(certificazion\w*|attestat\w*)\b/i },
   { key: 'work', re: /\b(experience|employment|work history)\b/i },
   { key: 'education', re: /\beducation\b/i },
   { key: 'skills', re: /\b(skills|competenc\w*|expertise|technolog\w*|proficienc\w*)\b/i },
@@ -104,13 +128,15 @@ const URL_RE = /(?:https?:\/\/)?(?:www\.)?[A-Za-z0-9-]+\.(?:dev|io|com|net|org|m
 const LOCATION_RE = /([A-Z][A-Za-z.'-]+(?:[ ][A-Z][A-Za-z.'-]+)*,\s*(?:[A-Z]{2}\b|[A-Z][A-Za-z]+))/
 const GPA_RE = /\b([0-4]\.\d{1,2})\s*(?:\/\s*(?:4|5|10)(?:\.0+)?)?\s*(?:GPA|CGPA)?\b/i
 
-const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*'
+const MONTH = '(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec|gen|mag|giu|lug|ago|set|ott|dic)[a-z]*'
 const YEAR = '(?:19|20)\\d{2}'
 const DATE_TOK = `(?:${MONTH}\\.?\\s*'?)?(?:\\d{1,2}[/.\\-]\\s*)?${YEAR}`
-const PRESENT = '(?:present|current|now|ongoing|to date|till date|today)'
+const PRESENT = '(?:present|current|now|ongoing|to date|till date|today|ad oggi|a oggi|oggi|attuale|in corso)'
 const RANGE_RE = new RegExp(`(${DATE_TOK})\\s*(?:[\\u2012-\\u2015~-]|to|\\bto\\b)\\s*(${DATE_TOK}|${PRESENT})`, 'i')
 const SINGLE_DATE_RE = new RegExp(DATE_TOK, 'i')
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+/** CVPyrites: Italian month stems (gennaio, maggio, giugno…) → month number. */
+const MONTHS_IT: Record<string, number> = { gen: 1, feb: 2, mar: 3, apr: 4, mag: 5, giu: 6, lug: 7, ago: 8, set: 9, ott: 10, nov: 11, dic: 12 }
 
 /** "Jan 2020" / "01/2020" / "2020" → "YYYY-MM" or "YYYY"; "Present" → "". */
 function normDate(tok: string): string {
@@ -119,7 +145,7 @@ function normDate(tok: string): string {
   const year = s.match(/(?:19|20)\d{2}/)?.[0]
   if (!year) return ''
   const mName = s.toLowerCase().match(MONTH)?.[0]
-  let mm = mName ? MONTHS.indexOf(mName.slice(0, 3)) + 1 : 0
+  let mm = mName ? MONTHS.indexOf(mName.slice(0, 3)) + 1 || MONTHS_IT[mName.slice(0, 3)] || 0 : 0
   if (!mm) {
     const numeric = s.match(/\b(\d{1,2})[/.\-]/)
     if (numeric) mm = parseInt(numeric[1], 10)
@@ -173,7 +199,7 @@ function pullLocation(text: string): { location: string; rest: string } {
 /* -------------------------------------------------------------- header fields */
 
 // Section labels and monograms masquerade as names in some templates' headers.
-const NOT_A_NAME = /^(contact(\s*(info|information|details))?|profile|summary|objective|about(\s*me)?|skills?|experience|education|resume|cv|curriculum\s*vitae|projects?|certifications?|references?)\.?$/i
+const NOT_A_NAME = /^(contact(\s*(info|information|details))?|profile|summary|objective|about(\s*me)?|skills?|experience|education|resume|cv|curriculum\s*vitae|projects?|certifications?|references?|profilo|competenze|esperienz\w*|istruzione|formazione|lingue|progetti|certificazioni|contatti|informazioni\s*personali|dati\s*personali)\.?$/i
 
 function scoreName(line: Line): number {
   const t = line.text.trim()
@@ -287,7 +313,7 @@ const sectionLeftX = (lines: Line[]): number => (lines.length ? Math.min(...line
 
 /**
  * A line is a highlight (bullet) if it carries a bullet glyph OR is indented past
- * the section's left margin. Many résumés — including CVAurum's own export —
+ * the section's left margin. Many résumés — including CVPyrites's own export —
  * render bullets via a hanging indent with no glyph in the text layer, so
  * indentation is the only reliable signal.
  */
@@ -393,6 +419,24 @@ const DATE_FRAGMENT = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a
  * Analyst" reads role-first). Leftover labelled lines (Environment:, Project:…)
  * become the entry summary; stray date fragments are dropped.
  */
+/** "Left — Right" / "Left – Right" / "Left | Right" (spaced separators only). */
+function splitDashed(t: string): { left: string; right: string } | null {
+  const m = t.match(/^(.+?)\s+[—–|]\s+(.+)$/) || t.match(/^(.+?)\s+-\s+(.+)$/)
+  return m ? { left: m[1].trim(), right: m[2].trim() } : null
+}
+
+/**
+ * Italian-style trailing place: "Automazioni Srl, Monaco di Baviera (Germania)",
+ * "MO.S.A.I.C., Sora (FR)", "Universidad de Sevilla (Spagna)".
+ */
+function splitTrailingPlace(t: string): { rest: string; place: string } {
+  const comma = t.match(/^(.+),\s*([A-ZÀ-Ý][\p{L}' .-]*\s*\([\p{L} .'-]{2,}\))$/u)
+  if (comma) return { rest: comma[1].trim(), place: comma[2].trim() }
+  const paren = t.match(/^(.+?)\s*\(([A-ZÀ-Ý][\p{L} .'-]{2,})\)$/u)
+  if (paren && !/^[A-Z]{2}$/.test(paren[2])) return { rest: paren[1].trim(), place: paren[2].trim() }
+  return { rest: t, place: '' }
+}
+
 function assignRoleCompany(headerLines: string[]): { position: string; name: string; summary: string } {
   let position = '',
     name = ''
@@ -461,12 +505,25 @@ function parseWork(lines: Line[], g: LayoutGraph): ResumeContent['work'] {
       if (rest) headerLines.push(rest)
     }
     const highlights = mergeHighlights(hlLines)
-    const { position, name, summary } = assignRoleCompany(headerLines)
+    const rc = assignRoleCompany(headerLines)
+    const { summary } = rc
+    let { position, name } = rc
+    let loc = location
+    // CVPyrites: one-line "Ruolo — Azienda, Città (Paese)" headers
+    if (!name && position) {
+      const sp = splitDashed(position)
+      if (sp) {
+        position = sp.left
+        const pl = splitTrailingPlace(sp.right)
+        name = pl.rest
+        if (!loc && pl.place) loc = pl.place
+      }
+    }
     return {
       id: uid(),
       name,
       position,
-      location,
+      location: loc,
       url: '',
       startDate: start,
       endDate: end,
@@ -482,15 +539,24 @@ function parseEducation(lines: Line[], g: LayoutGraph): ResumeContent['education
     const d = pullDates(text)
     const gpa = text.match(GPA_RE)?.[1] ?? ''
     const headerLines = entry.filter((l) => !isBullet(l.text)).map((l) => cleanEdge(pullDates(l.text).rest)).filter(Boolean)
-    const degreeLine = headerLines.find((l) => /\b(b\.?s\.?|b\.?a\.?|m\.?s\.?|m\.?a\.?|ph\.?d|bachelor|master|associate|diploma|mba|b\.?tech|m\.?tech|b\.?e\.?\b)/i.test(l))
-    const instLine = headerLines.find((l) => l !== degreeLine) || headerLines[0] || ''
+    let degreeLine = headerLines.find((l) => /\b(b\.?s\.?|b\.?a\.?|m\.?s\.?|m\.?a\.?|ph\.?d|bachelor|master|associate|diploma|mba|b\.?tech|m\.?tech|b\.?e\.?\b|laurea|dottorato|maturit[àa]|licenza|qualifica|erasmus)/i.test(l))
+    let instLine = headerLines.find((l) => l !== degreeLine) || headerLines[0] || ''
+    // CVPyrites: one-line "Laurea in … — Università di …" / "Erasmus+ — Universidad de Sevilla (Spagna)"
+    if (degreeLine && instLine === degreeLine) {
+      const sp = splitDashed(degreeLine)
+      if (sp) {
+        degreeLine = sp.left
+        instLine = sp.right
+      }
+    }
     // Strip GPA, then peel the trailing "City, ST" so it doesn't pollute the name.
     const instNoGpa = instLine.replace(GPA_RE, '').trim()
     const plInst = pullLocation(instNoGpa)
-    const loc = plInst.location || text.match(LOCATION_RE)?.[1] || ''
+    const itPlace = plInst.location ? null : splitTrailingPlace(instNoGpa)
+    const loc = plInst.location || itPlace?.place || text.match(LOCATION_RE)?.[1] || ''
     return {
       id: uid(),
-      institution: (plInst.location ? plInst.rest : instNoGpa).trim() || '',
+      institution: (plInst.location ? plInst.rest : itPlace?.place ? itPlace.rest : instNoGpa).trim() || '',
       area: degreeLine ? degreeLine.replace(GPA_RE, '').trim() : '',
       studyType: '',
       location: loc,
@@ -560,11 +626,83 @@ function parseProjects(lines: Line[], g: LayoutGraph): ResumeContent['projects']
   }).filter((p) => p.name)
 }
 
+/* -------------------------------------------------------- languages (CVPyrites) */
+
+const CEFR_TOKEN = /\b([ABC][12])\b/g
+const NATIVE_RE = /\b(madrelingua|lingua\s*madre|native|mother[\s-]?tongue|bilingue|bilingual)\b/i
+const CERT_RE = /\b(IELTS|TOEFL|TOEIC|Cambridge|CAE|FCE|CPE|PET|Trinity|Linguaskill|DELE|SIELE|DELF|DALF|Goethe|TestDaF|telc|CILS|CELI|PLIDA|HSK|JLPT)\b.*/i
+const GRID_NOISE = /^(altre\s*lingue|other\s*languages?|comprensione|ascolto|lettura|produzione|interazione|parlato|scritt\w*|espressione|understanding|listening|reading|speaking|writing|spoken|livell\w*\s*:|levels?\s*:|quadro\s*comune|common\s*european)/i
+
+type ParsedLang = { id: string; language: string; fluency: string; level?: ResumeContent['languages'][number]['level']; certification?: { name: string; score: string; year: string }; europass?: ResumeContent['languages'][number]['europass'] }
+
+/**
+ * "Inglese: C1 – IELTS 7.5 (2023)", "Lingua madre: Italiano", Europass grid rows
+ * ("Inglese  B2 B2 B1 B1 B2") and plain "English, Spanish" lists.
+ */
+function parseLanguages(text: string[]): ParsedLang[] {
+  const out: ParsedLang[] = []
+  for (const raw of text) {
+    const t = raw.trim()
+    if (!t || GRID_NOISE.test(t)) continue
+    // "Lingua madre: Italiano" / "Madrelingua: italiano, inglese"
+    const mother = t.match(/^(lingua\s*madre|madrelingua|mother[\s-]?tongues?|native\s*languages?)\s*[:\-–]\s*(.+)$/i)
+    if (mother) {
+      for (const name of mother[2].split(/[,;/]|\se\s/)) {
+        const n = name.trim()
+        if (n) out.push({ id: uid(), language: capitalize(n), fluency: '', level: 'native' })
+      }
+      continue
+    }
+    // Several languages on one line ("English (Native), Spanish (B2) | French") are
+    // split; a labelled or certification line ("Inglese: C1, IELTS 7.5") stays whole.
+    const single = /:/.test(t) || CERT_RE.test(t)
+    const items = single ? [t] : t.split(/[,;|]/)
+    for (const item of items) {
+      const it = item.trim()
+      if (!it) continue
+      const name = capitalize(it.split(/\s*[:–—(]|\s+-\s+|\s+[ABC][12]\b/)[0].replace(NATIVE_RE, '').trim())
+      if (!name) continue
+      const lang: ParsedLang = { id: uid(), language: name, fluency: '' }
+      const lv = [...it.matchAll(CEFR_TOKEN)].map((m) => m[1].toUpperCase())
+      if (NATIVE_RE.test(it)) lang.level = 'native'
+      else if (lv.length >= 3) {
+        // Europass grid row: Ascolto, Lettura, Interazione, Produzione orale, Scrittura
+        const sorted = [...lv].sort()
+        lang.level = sorted[Math.floor(sorted.length / 2)] as ParsedLang['level']
+        lang.europass = { understanding: lv[0] as never, speaking: (lv[2] ?? lv[1]) as never, writing: lv[lv.length - 1] as never }
+      } else if (lv.length) lang.level = lv[0] as ParsedLang['level']
+      const cert = it.match(CERT_RE)?.[0]
+      if (cert) {
+        const year = cert.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? ''
+        const score = cert.match(/\b\d{1,3}(?:[.,]\d)?\s*\/\s*\d{1,3}\b|\b\d\.\d\b/)?.[0]?.replace(/\s+/g, '') ?? ''
+        const certName = cert
+          .replace(year, '')
+          .replace(score, '')
+          .replace(/\b(overall\s*score|punteggio|score|cefr\s*level\s*[ABC][12]|livello\s*[ABC][12])\b/gi, '')
+          .replace(/[()–—:,-]+\s*$/g, '')
+          .replace(/\s*[()–—:,]+\s*/g, ' ')
+          .replace(/\s{2,}/g, ' ')
+          .trim()
+        if (certName) lang.certification = { name: certName, score, year }
+      }
+      // keep any unparsed wording so nothing is lost
+      if (!lang.level && !lang.certification) lang.fluency = (it.match(/\(([^)]+)\)/)?.[1] || it.slice(name.length).replace(/^[\s:–—-]+/, '')).trim()
+      out.push(lang)
+    }
+  }
+  return out
+}
+const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s)
+
+/* -------------------------------------------- data-processing consent (CVPyrites) */
+
+// The Italian closing declaration: "Autorizzo il trattamento dei miei dati personali…"
+const CONSENT_RE = /^(autorizzo|acconsento|do il (mio )?consenso)\b.*|trattamento\s+dei\s+(miei\s+)?dati\s+personali|ai\s+sensi\s+del(l['’])?\s*(d\.?\s*lgs|reg(olamento)?\s*(ue)?\s*(2016\/)?679|gdpr|art)/i
+const PLACE_DATE_RE = /^([A-ZÀ-Ý][\p{L}' .-]+),\s*(?:lì\s*)?(\d{1,2}[/.\-]\d{1,2}[/.\-]\d{2,4}|\d{1,2}\s+\p{L}+\s+\d{4})$/u
+
 function parseSimpleList(lines: Line[], key: 'languages' | 'certificates' | 'awards' | 'interests') {
   const text = lines.map((l) => stripBullet(l.text)).filter(Boolean)
-  if (key === 'languages') {
-    return text.flatMap((t) => t.split(/[,;|]/)).map((s) => s.trim()).filter(Boolean).map((language) => ({ id: uid(), language: language.replace(/\s*\(.*\)$/, '').trim(), fluency: (language.match(/\(([^)]+)\)/)?.[1] || '').trim() }))
-  }
+  if (key === 'languages') return parseLanguages(text)
   if (key === 'interests') {
     const kws = text.flatMap((t) => t.split(/[,;|•·]/)).map((s) => s.trim()).filter(Boolean)
     return kws.length ? [{ id: uid(), name: 'Interests', keywords: kws }] : []
@@ -592,6 +730,32 @@ export function parseLayout(g: LayoutGraph): ImportResult {
   const sections = splitSections(g)
   const header = sections.find((s) => s.key === 'header')
   if (header) parseHeader(header.lines, content)
+
+  // CVPyrites: pull the GDPR consent paragraph out of whatever section it trails.
+  const consent: string[] = []
+  for (const sec of sections) {
+    if (sec.key === 'closingStatement') {
+      consent.push(...sec.lines.map((l) => l.text.trim()).filter(Boolean))
+      sec.lines = []
+      continue
+    }
+    const at = sec.lines.findIndex((l) => CONSENT_RE.test(l.text.trim()))
+    if (at >= 0) {
+      consent.push(...sec.lines.slice(at).map((l) => l.text.trim()).filter(Boolean))
+      sec.lines = sec.lines.slice(0, at)
+    }
+  }
+  if (consent.length) {
+    const body: string[] = []
+    for (const t of consent) {
+      const pd = t.match(PLACE_DATE_RE)
+      if (pd) {
+        content.closingStatement.place = pd[1].trim()
+        content.closingStatement.date = pd[2].trim()
+      } else if (!/^(firma|in fede|signature)\b/i.test(t) && (body.length === 0 || !content.closingStatement.place)) body.push(t)
+    }
+    content.closingStatement.statement = `<p>${esc(body.join(' '))}</p>`
+  }
 
   for (const sec of sections) {
     const lines = sec.lines.filter((l) => l.text.trim())

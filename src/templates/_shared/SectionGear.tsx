@@ -35,6 +35,22 @@ export function SectionGear({ sectionKey, doc, editMeta }: { sectionKey: string;
       m.layout.sectionSettings[sectionKey] = { ...cur, [field]: shown ? false : true }
     })
 
+  // CVPyrites: language display flags (langMeter defaults off, langDescriptor on).
+  const setFlag = (field: 'langMeter' | 'langDescriptor', value: boolean) =>
+    editMeta((m) => {
+      if (!m.layout.sectionSettings) m.layout.sectionSettings = {}
+      const cur = m.layout.sectionSettings[sectionKey] ?? {}
+      m.layout.sectionSettings[sectionKey] = { ...cur, [field]: value }
+    })
+  const it = doc.metadata.locale !== 'en'
+  const langRows =
+    base === 'languages'
+      ? [
+          { key: 'desc', label: it ? 'Descrizione livello (C1 – Avanzato)' : 'Level description (C1 – Advanced)', on: opts.langDescriptor !== false, flip: () => setFlag('langDescriptor', opts.langDescriptor === false) },
+          { key: 'meter', label: it ? 'Pallini accanto al livello' : 'Dots next to the level', on: opts.langMeter === true, flip: () => setFlag('langMeter', opts.langMeter !== true) },
+        ]
+      : []
+
   const hide = () =>
     editMeta((m) => {
       if (!m.layout.hidden.includes(sectionKey)) m.layout.hidden.push(sectionKey)
@@ -83,7 +99,10 @@ export function SectionGear({ sectionKey, doc, editMeta }: { sectionKey: string;
               style={{ top: pos.top, left: pos.left }}
             >
               <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Section settings</div>
-              {rows.length === 0 && <div className="px-2 py-1 text-xs text-muted-foreground">No field options for this section.</div>}
+              {langRows.map((r) => (
+                <ToggleRow key={r.key} label={r.label} on={r.on} onClick={r.flip} />
+              ))}
+              {rows.length === 0 && langRows.length === 0 && <div className="px-2 py-1 text-xs text-muted-foreground">No field options for this section.</div>}
               {rows.map((r) => (
                 <ToggleRow key={r.field} label={r.label} on={opts[r.field] !== false} onClick={() => toggle(r.field)} />
               ))}

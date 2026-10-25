@@ -34,12 +34,12 @@ import { useTitle } from '@/lib/useTitle'
 
 const GOLD = 'linear-gradient(135deg,#8a5a12,#d4982f,#f7d774)'
 const goldText = { backgroundImage: GOLD, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' } as const
-const REPO_URL = 'https://github.com/akhil-dara/cvaurum'
+const REPO_URL = 'https://github.com/BibiezDelBubez/CVPyrites'
 
 /** Templates shown live (with sample content) in the showcase strip. */
 const SHOWCASE = ['mercury', 'halcyon', 'aria', 'deedy', 'onyx', 'portrait']
 
-/** Honest head-to-head: what CVAurum does vs. what most resume builders do. */
+/** Honest head-to-head: what CVPyrites does vs. what most resume builders do. */
 const COMPARISON: { capability: string; cvaurum: string; others: string }[] = [
   { capability: 'Where your data lives', cvaurum: 'Only in your browser — no server, no account, no tracking', others: 'Uploaded to a server behind a login' },
   { capability: 'Source code', cvaurum: 'Fully open source (MIT) — read it, fork it, self-host it', others: 'Closed — you take the privacy claims on faith' },
@@ -51,7 +51,7 @@ const COMPARISON: { capability: string; cvaurum: string; others: string }[] = [
 ]
 
 export function Landing() {
-  useTitle('CVAurum — Free Open-Source Resume Builder (Local, Private, ATS-Ready)')
+  useTitle('CVPyrites — Free Open-Source Resume Builder (Local, Private, ATS-Ready)')
   const library = useAppStore((s) => s.library)
   const { create, importFile, importPdf } = useResumeActions()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -121,7 +121,7 @@ export function Landing() {
                 A beautiful resume that never leaves your <span style={goldText}>browser</span>.
               </h1>
               <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-                CVAurum is the only resume builder that's <strong className="text-foreground">private</strong> and{' '}
+                CVPyrites is the only resume builder that's <strong className="text-foreground">private</strong> and{' '}
                 <strong className="text-foreground">open-source</strong> and genuinely beautiful — with 30+ templates, a
                 built-in ATS check, and true offline use. <strong className="text-foreground">Free, forever.</strong>
               </p>
@@ -220,7 +220,7 @@ export function Landing() {
         {/* comparison */}
         <section id="compare" className="mx-auto max-w-5xl px-6 py-14">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold tracking-tight">Most builders win one thing. CVAurum wins them all.</h2>
+            <h2 className="text-2xl font-semibold tracking-tight">Most builders win one thing. CVPyrites wins them all.</h2>
             <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
               Privacy, or open source, or design, or ATS, or offline — most tools pick one. Here's the honest head-to-head.
             </p>
@@ -230,7 +230,7 @@ export function Landing() {
               <thead>
                 <tr className="bg-surface-muted/50 text-left">
                   <th className="px-4 py-3 font-medium text-muted-foreground"> </th>
-                  <th className="px-4 py-3 font-bold" style={goldText}>CVAurum</th>
+                  <th className="px-4 py-3 font-bold" style={goldText}>CVPyrites</th>
                   <th className="px-4 py-3 font-medium text-muted-foreground">Most builders</th>
                 </tr>
               </thead>
@@ -262,7 +262,7 @@ export function Landing() {
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight">Your résumé never leaves your device</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Most online builders upload your career history to their servers. CVAurum doesn't have a server. Everything —
+                  Most online builders upload your career history to their servers. CVPyrites doesn't have a server. Everything —
                   your content, your photo, your exports — is created and stored locally in your browser. You can back it all up
                   to a single file and restore it anywhere. It's open source, so you can verify exactly that.
                 </p>
@@ -283,16 +283,16 @@ export function Landing() {
         <section className="mx-auto max-w-3xl px-6 pb-16">
           <h2 className="text-center text-xl font-semibold tracking-tight">Questions</h2>
           <div className="mt-6 space-y-3">
-            <Faq q="How do I know my data is really private?" a="Because you can check. CVAurum runs entirely in your browser — your resume is stored locally and never sent anywhere. There's no account, no server, and no analytics. Open your browser's network tab and you'll see zero outbound requests, even for fonts, which we self-host." />
-            <Faq q="If it's free and open source, what's the catch?" a="There isn't one. CVAurum is MIT-licensed and the full source is on GitHub. There's no paid tier, no export paywall, and no data to monetize because we never collect any. Fork it, self-host it, or run it offline forever." />
+            <Faq q="How do I know my data is really private?" a="Because you can check. CVPyrites runs entirely in your browser — your resume is stored locally and never sent anywhere. There's no account, no server, and no analytics. Open your browser's network tab and you'll see zero outbound requests, even for fonts, which we self-host." />
+            <Faq q="If it's free and open source, what's the catch?" a="There isn't one. CVPyrites is MIT-licensed and the full source is on GitHub. There's no paid tier, no export paywall, and no data to monetize because we never collect any. Fork it, self-host it, or run it offline forever." />
             <Faq q="Is the ATS score real, or AI guesswork?" a="It's deterministic, not a guess. The same resume and job description always produce the same score, and it shows exactly which keywords matched and which are missing — so you can fix your resume with confidence." />
             <Faq q="Where is my data stored?" a="Only in your browser, using local storage. Nothing is sent anywhere. Clear your browser data and it's gone — so use Backup to keep a copy." />
             <Faq q="Will my résumé pass ATS scans?" a="The exported PDF and Word files use real, selectable text (not an image), and there's a built-in ATS check that scores structure and keyword coverage against a job description." />
             <Faq q="Can I move my résumé to another computer?" a="Yes. Export a full backup (one file) or a single JSON Resume file, then import it in any browser." />
-            <Faq q="Do I need to create an account?" a="No. There's no sign-up, no email, and no login — open CVAurum and start editing immediately. Most builders make you register before you can even see the editor; CVAurum never does." />
-            <Faq q="What's the difference between a CV and a resume?" a="A resume is a concise, one-to-two page summary tailored to a specific job (common in the US). A CV is a longer, comprehensive record of your academic and professional history (standard in academia and much of Europe). CVAurum builds both — pick a compact template for a resume, or add sections for a full CV." />
+            <Faq q="Do I need to create an account?" a="No. There's no sign-up, no email, and no login — open CVPyrites and start editing immediately. Most builders make you register before you can even see the editor; CVPyrites never does." />
+            <Faq q="What's the difference between a CV and a resume?" a="A resume is a concise, one-to-two page summary tailored to a specific job (common in the US). A CV is a longer, comprehensive record of your academic and professional history (standard in academia and much of Europe). CVPyrites builds both — pick a compact template for a resume, or add sections for a full CV." />
             <Faq q="What file formats can I download?" a="A crisp vector PDF with real, selectable text; an editable Word (.docx) that mirrors your template; and the open JSON Resume format. Every export is free and unlimited — no paywall, no watermark." />
-            <Faq q="How long should my resume be?" a="For most roles, one page — two if you have 10+ years of experience. CVAurum auto-fits your content to a single page when it's close, and shows live page-break guides so you always know where you stand." />
+            <Faq q="How long should my resume be?" a="For most roles, one page — two if you have 10+ years of experience. CVPyrites auto-fits your content to a single page when it's close, and shows live page-break guides so you always know where you stand." />
           </div>
         </section>
       </main>

@@ -105,6 +105,29 @@ export const DEFAULT_LABELS: Record<string, string> = {
   closingStatement: 'Closing Statement',
 }
 
+/** Italian default headings (CVPyrites), Europass-style wording. */
+export const DEFAULT_LABELS_IT: Record<string, string> = {
+  summary: 'Profilo',
+  work: 'Esperienza lavorativa',
+  education: 'Istruzione e formazione',
+  projects: 'Progetti',
+  skills: 'Competenze',
+  languages: 'Lingue',
+  certificates: 'Certificazioni',
+  awards: 'Premi e riconoscimenti',
+  publications: 'Pubblicazioni',
+  volunteer: 'Volontariato',
+  interests: 'Interessi',
+  references: 'Referenze',
+  closingStatement: 'Trattamento dei dati personali',
+}
+
+/** Default heading for a section in the resume's language. */
+export function defaultLabel(key: string, locale?: 'it' | 'en'): string {
+  const table = locale === 'en' ? DEFAULT_LABELS : DEFAULT_LABELS_IT
+  return table[key] ?? DEFAULT_LABELS[key] ?? key
+}
+
 /** Icon hint per section (lucide icon name resolved in the editor). */
 export const SECTION_ICONS: Record<string, string> = {
   summary: 'AlignLeft',
@@ -129,9 +152,9 @@ export function sectionLabel(key: string, doc: ResumeDocument): string {
   if (override) return override
   if (key.startsWith('custom-')) {
     const id = key.slice('custom-'.length)
-    return doc.content.custom.find((c) => c.id === id)?.name || 'Custom'
+    return doc.content.custom.find((c) => c.id === id)?.name || (doc.metadata.locale === 'en' ? 'Custom' : 'Altro')
   }
-  return DEFAULT_LABELS[key] ?? key
+  return defaultLabel(key, doc.metadata.locale)
 }
 
 export function customKey(id: string): string {

@@ -4,7 +4,7 @@ import { X, Plus } from 'lucide-react'
 import type { ResumeDocument } from '@/types/document'
 import { getTemplate } from '@/templates/registry'
 import { SectionPreview } from '@/templates/_shared/Artboard'
-import { DEFAULT_LABELS } from '@/lib/sections'
+import { defaultLabel } from '@/lib/sections'
 import { PREVIEW_CONTENT } from '@/data/previewSections'
 
 /**
@@ -72,7 +72,7 @@ export function SectionGallery({
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent" />
               </div>
               <div className="flex items-center justify-between gap-2 px-3.5 py-2.5">
-                <span className="truncate text-sm font-semibold text-foreground">{DEFAULT_LABELS[key] ?? key}</span>
+                <span className="truncate text-sm font-semibold text-foreground">{defaultLabel(key, doc.metadata.locale)}</span>
                 {PlusBadge}
               </div>
             </button>

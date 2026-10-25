@@ -1,11 +1,12 @@
 /**
  * Import/export. Files are valid JSON Resume documents (content at top level)
- * with CVAurum visual metadata namespaced under `meta.cvaurum`, so exports
+ * with CVPyrites visual metadata namespaced under `meta.cvaurum`, so exports
  * round-trip with the wider JSON Resume ecosystem. Import is defensive: a single
  * bad field or item never throws away the whole resume.
  */
 import { z } from 'zod'
 import { uid, downloadBlob, resumeFilename } from '@/lib/utils'
+import { langDisplay, languageLine } from '@/lib/languages'
 import { ResumeContentSchema, type JsonResumeExport, type ResumeDocument } from '@/types/document'
 import {
   BasicsSchema,
@@ -30,11 +31,17 @@ export class ImportError extends Error {}
 
 export function toJsonResume(doc: ResumeDocument): JsonResumeExport {
   const { custom, ...rest } = doc.content
+  // CVPyrites: JSON Resume tools only know `fluency` — fill it with the composed
+  // line ("C1 – Avanzato · IELTS Academic 7.5 (2023)"); level/certification stay
+  // alongside as extensions and win again on re-import.
+  const disp = langDisplay(doc.metadata.layout.sectionSettings?.languages)
+  const languages = rest.languages.map((l) => (l.level ? { ...l, fluency: languageLine(l, doc.metadata.locale, disp.descriptor) } : l))
   // No `$schema` URL: the export stays fully self-contained (no external
   // references). `meta.version` still marks it as JSON Resume v1, and the file
   // re-imports cleanly here and in the wider JSON Resume ecosystem.
   return {
     ...rest,
+    languages,
     custom,
     meta: {
       version: 'v1.0.0',
@@ -55,7 +62,7 @@ function salvageArray<T>(schema: z.ZodTypeAny, arr: unknown): T[] {
   return arr.map((x) => schema.safeParse(x)).filter((r) => r.success).map((r) => (r as { data: T }).data)
 }
 
-/** Parse arbitrary JSON Resume / CVAurum content WITHOUT ever throwing away the
+/** Parse arbitrary JSON Resume / CVPyrites content WITHOUT ever throwing away the
  *  whole document on one bad value. */
 function parseContentResilient(obj: Record<string, unknown>) {
   const input = {
@@ -94,7 +101,7 @@ function parseContentResilient(obj: Record<string, unknown>) {
   })
 }
 
-/** Parse an arbitrary JSON Resume (or CVAurum) object into a fresh document. */
+/** Parse an arbitrary JSON Resume (or CVPyrites) object into a fresh document. */
 export function fromJsonResume(raw: unknown): ResumeDocument {
   const obj = (raw ?? {}) as Record<string, unknown>
   const content = parseContentResilient(obj)

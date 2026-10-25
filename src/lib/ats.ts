@@ -8,6 +8,7 @@ import type { ResumeContent, ResumeDocument } from '@/types/document'
 import { htmlToText } from '@/lib/utils'
 import { getTemplate } from '@/templates/registry'
 import { sectionHasContent } from '@/lib/sections'
+import { effectiveLevel, languageLine } from '@/lib/languages'
 
 export type CheckStatus = 'pass' | 'warn' | 'fail'
 export interface AtsCheck {
@@ -75,7 +76,9 @@ export function extractResumeText(doc: ResumeDocument): string {
   c.awards.forEach((a) => parts.push(a.title, htmlToText(a.summary)))
   c.certificates.forEach((x) => parts.push(x.name, x.issuer))
   c.publications.forEach((p) => parts.push(p.name, htmlToText(p.summary)))
-  c.languages.forEach((l) => parts.push(l.language))
+  // CVPyrites: levels & certifications are keywords too ("C1", "avanzato", "IELTS")
+  // (descriptor always included here: matching "avanzato" costs nothing)
+  c.languages.forEach((l) => parts.push(l.language, languageLine(l, doc.metadata.locale, true)))
   c.interests.forEach((i) => parts.push(i.name, ...(i.keywords ?? [])))
   c.custom.forEach((sec) => sec.items.forEach((it) => parts.push(it.name, it.subtitle, htmlToText(it.summary), ...(it.highlights ?? []).map(htmlToText))))
   return parts.filter(Boolean).join(' \n ')
@@ -214,6 +217,21 @@ export function analyzeResume(doc: ResumeDocument): AtsReport {
   // photo warning (some ATS choke on images / headshots)
   if (doc.metadata.layout.showPhoto && c.basics.image) {
     push('photo', 'Photo', 'warn', 'A photo can confuse some ATS and invite bias screening in the US/UK. Consider hiding it for ATS-heavy applications.', 0.5)
+  }
+
+  // CVPyrites: language levels in the standard CEFR / QCER format
+  const langsNoLevel = c.languages.filter((l) => (l.language || '').trim() && !effectiveLevel(l)).map((l) => l.language)
+  if (langsNoLevel.length) {
+    const itLoc = doc.metadata.locale !== 'en'
+    push(
+      'languages-level',
+      itLoc ? 'Livello lingue (QCER)' : 'Language levels (CEFR)',
+      'warn',
+      itLoc
+        ? `${langsNoLevel.join(', ')}: livello non indicato in formato QCER (A1–C2 o Madrelingua). Recruiter e ATS cercano “B2”, “C1”…`
+        : `${langsNoLevel.join(', ')}: no CEFR level (A1–C2 or Native). Recruiters and ATS look for “B2”, “C1”…`,
+      0.5
+    )
   }
 
   // custom (non-standard) section names

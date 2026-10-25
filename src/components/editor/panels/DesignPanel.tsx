@@ -37,6 +37,24 @@ export function DesignPanel({ doc }: { doc: ResumeDocument }) {
 
   return (
     <div className="space-y-6">
+      <FieldGroup title="Lingua del CV / Resume language">
+        <div>
+          <Segmented
+            value={m.locale}
+            options={[
+              { value: 'it', label: 'Italiano' },
+              { value: 'en', label: 'English' },
+            ]}
+            onChange={(v) => update((md) => { md.locale = v })}
+          />
+          <p className="-mt-1 text-[11px] text-muted-foreground">
+            {m.locale === 'en'
+              ? 'Default section headings and dates in English (Jan 2021 — Present). Renamed headings are kept.'
+              : 'Titoli predefiniti delle sezioni e date in italiano (04/2021 – oggi). I titoli rinominati a mano restano invariati.'}
+          </p>
+        </div>
+      </FieldGroup>
+
       <FieldGroup title="Accent color">
         <div className="grid grid-cols-6 gap-2">
           {PALETTES.map((p) => (
@@ -92,7 +110,7 @@ export function DesignPanel({ doc }: { doc: ResumeDocument }) {
           </div>
         </div>
         <div>
-          <label className="label">Skill &amp; language level</label>
+          <label className="label">Skill level</label>
           <Segmented
             value={m.typography.proficiency}
             options={[
@@ -104,7 +122,7 @@ export function DesignPanel({ doc }: { doc: ResumeDocument }) {
             ]}
             onChange={(v) => update((md) => { md.typography.proficiency = v })}
           />
-          <p className="-mt-1 text-[11px] text-muted-foreground">How the 0–5 rating on skills &amp; languages is shown.</p>
+          <p className="-mt-1 text-[11px] text-muted-foreground">How the 0–5 rating on skills is shown. Languages: use the section’s gear on the resume (CEFR text, optional dots).</p>
         </div>
       </FieldGroup>
 

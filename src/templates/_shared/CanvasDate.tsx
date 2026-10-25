@@ -58,6 +58,7 @@ function MonthYear({ value, onChange, present }: { value: string; onChange: (v: 
  */
 export function CanvasDate({
   edit,
+  locale,
   range,
   start,
   end,
@@ -65,6 +66,8 @@ export function CanvasDate({
   applyEnd,
 }: {
   edit: EditFn
+  /** resume language: how the date label on the canvas is formatted */
+  locale?: 'it' | 'en'
   range?: boolean
   start: string
   end?: string
@@ -81,7 +84,7 @@ export function CanvasDate({
     return a != null && b != null && b < a
   })()
 
-  const label = range ? formatDateRange(start, end) || 'Add dates' : formatDate(start) || 'Add date'
+  const label = range ? formatDateRange(start, end, { locale }) || 'Add dates' : formatDate(start, { locale }) || 'Add date'
 
   const openAt = (e: React.MouseEvent) => {
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect()

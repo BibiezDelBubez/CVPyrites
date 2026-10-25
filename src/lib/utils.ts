@@ -83,16 +83,27 @@ export function htmlEscape(s: string): string {
     .replace(/>/g, '&gt;')
 }
 
-/** Format an ISO-ish date string for display. Accepts "2021", "2021-05", "2021-05-01". */
-export function formatDate(value?: string, opts: { month?: 'short' | 'long' } = {}): string {
+type DateOpts = { month?: 'short' | 'long'; locale?: 'it' | 'en' }
+
+/** Word used for an ongoing end date ("Jan 2021 — Present" / "01/2021 – oggi"). */
+export function presentLabel(locale?: 'it' | 'en'): string {
+  return locale === 'en' ? 'Present' : 'oggi'
+}
+
+/**
+ * Format an ISO-ish date string for display. Accepts "2021", "2021-05", "2021-05-01".
+ * Italian (the default) uses the Europass-style numeric "MM/YYYY"; English keeps "Jan 2021".
+ */
+export function formatDate(value?: string, opts: DateOpts = {}): string {
   if (!value) return ''
   const trimmed = value.trim()
-  if (/^present$/i.test(trimmed)) return 'Present'
+  if (/^present$/i.test(trimmed)) return presentLabel(opts.locale)
   // Already human text → pass through
   if (!/^\d{4}(-\d{1,2}){0,2}$/.test(trimmed)) return trimmed
   const [y, m] = trimmed.split('-')
   if (!m) return y
   const monthIdx = Math.max(0, Math.min(11, parseInt(m, 10) - 1))
+  if (opts.locale !== 'en') return `${String(monthIdx + 1).padStart(2, '0')}/${y}`
   const months =
     opts.month === 'long'
       ? ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -100,14 +111,14 @@ export function formatDate(value?: string, opts: { month?: 'short' | 'long' } = 
   return `${months[monthIdx]} ${y}`
 }
 
-/** "Jan 2021 — Present" style range. */
-export function formatDateRange(start?: string, end?: string, opts?: { month?: 'short' | 'long' }): string {
+/** "Jan 2021 — Present" (en) / "01/2021 – oggi" (it) style range. */
+export function formatDateRange(start?: string, end?: string, opts: DateOpts = {}): string {
   const s = formatDate(start, opts)
-  const e = end ? formatDate(end, opts) : 'Present'
+  const e = end ? formatDate(end, opts) : presentLabel(opts.locale)
   if (!s && !e) return ''
   if (!s) return e
   if (!e) return s
-  return `${s} — ${e}`
+  return opts.locale === 'en' ? `${s} — ${e}` : `${s} – ${e}`
 }
 
 /** Strip HTML tags to plain text (used for ATS extraction & previews). */

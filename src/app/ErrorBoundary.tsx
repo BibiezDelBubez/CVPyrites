@@ -13,7 +13,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
   }
 
   componentDidCatch(error: Error, info: unknown) {
-    console.error('CVAurum error boundary caught:', error, info)
+    console.error('CVPyrites error boundary caught:', error, info)
   }
 
   render() {

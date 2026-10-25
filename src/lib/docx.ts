@@ -35,6 +35,7 @@ import type { ResumeDocument } from '@/types/document'
 import { resolveOrder, sectionLabel } from '@/lib/sections'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { downloadBlob, formatDate, formatDateRange, htmlToText, resumeFilename } from '@/lib/utils'
+import { certificationText, europassText, langDisplay, levelLine } from '@/lib/languages'
 import { prettyUrl, cleanEmail } from '@/templates/_shared/atoms'
 
 /* ----------------------------------------------------------------- helpers */
@@ -192,6 +193,7 @@ function photoParagraph(doc: ResumeDocument, sizePx: number, align: (typeof Alig
 
 function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: number): Paragraph[] {
   const { content } = doc
+  const dOpts = { locale: doc.metadata.locale }
   const out: Paragraph[] = []
   const b = doc.content.basics
   const meter = C.prof === 'dots' || C.prof === 'bars' || C.prof === 'stars'
@@ -204,7 +206,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
     } else if (key === 'work') {
       out.push(heading(label, C))
       for (const w of content.work) {
-        out.push(titleDate(w.position || w.name || 'Role', formatDateRange(w.startDate, w.endDate), C, width))
+        out.push(titleDate(w.position || w.name || 'Role', formatDateRange(w.startDate, w.endDate, dOpts), C, width))
         const s = [w.name && w.position ? w.name : '', w.location].filter(Boolean).join('  ·  ')
         if (s) out.push(sub(s, C))
         if (has(w.summary)) out.push(...summaryParas(w.summary!, C))
@@ -213,7 +215,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
     } else if (key === 'education') {
       out.push(heading(label, C))
       for (const e of content.education) {
-        out.push(titleDate(e.institution || 'Institution', formatDateRange(e.startDate, e.endDate), C, width))
+        out.push(titleDate(e.institution || 'Institution', formatDateRange(e.startDate, e.endDate, dOpts), C, width))
         const line = [[e.studyType, e.area].filter(Boolean).join(', '), e.score].filter(Boolean).join('  ·  ')
         if (line) out.push(sub(line, C))
         if (has(e.summary)) out.push(...summaryParas(e.summary!, C))
@@ -221,7 +223,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
     } else if (key === 'projects') {
       out.push(heading(label, C))
       for (const p of content.projects) {
-        out.push(titleDate(p.name || 'Project', formatDateRange(p.startDate, p.endDate), C, width))
+        out.push(titleDate(p.name || 'Project', formatDateRange(p.startDate, p.endDate, dOpts), C, width))
         if (p.url) out.push(new Paragraph({ spacing: { after: 24 }, children: [new TextRun({ text: prettyUrl(p.url), color: C.accent, size: SIZE.sub })] }))
         if (p.description) out.push(sub(p.description, C))
         out.push(...bulletsOf(p.highlights ?? [], C))
@@ -242,34 +244,43 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
       }
     } else if (key === 'languages') {
       out.push(heading(label, C))
+      const disp = langDisplay(doc.metadata.layout.sectionSettings?.languages)
       for (const l of content.languages) {
-        if (typeof l.rating === 'number' && meter) {
-          out.push(new Paragraph({ spacing: { after: 28 }, children: [new TextRun({ text: `${l.language}\t`, bold: true, color: C.body, size: SIZE.body }), ...meterRuns(l.rating, C.prof, C.accent, C.muted)], tabStops: [{ type: TabStopType.RIGHT, position: width }] }))
+        const level = levelLine(l, doc.metadata.locale, disp.descriptor)
+        const cert = certificationText(l, doc.metadata.locale)
+        const detail = europassText(l, doc.metadata.locale)
+        if (!(l.language || '').trim() && !level && !cert && !detail) continue
+        if (!level && typeof l.rating === 'number' && meter) {
+          out.push(new Paragraph({ spacing: { after: cert || detail ? 0 : 28 }, children: [new TextRun({ text: `${l.language}\t`, bold: true, color: C.body, size: SIZE.body }), ...meterRuns(l.rating, C.prof, C.accent, C.muted)], tabStops: [{ type: TabStopType.RIGHT, position: width }] }))
         } else {
+          // same layout as the resume: language left, level right-aligned
           const kids: ParagraphChild[] = [new TextRun({ text: l.language || '', bold: true, color: C.body, size: SIZE.body })]
-          if (l.fluency && C.prof !== 'none') kids.push(new TextRun({ text: `  —  ${l.fluency}`, color: C.muted, size: SIZE.sub }))
-          out.push(new Paragraph({ spacing: { after: 28 }, children: kids }))
+          if (level) kids.push(new TextRun({ text: `\t${level}`, color: C.muted, size: SIZE.sub }))
+          out.push(new Paragraph({ spacing: { after: cert || detail ? 0 : 28 }, tabStops: [{ type: TabStopType.RIGHT, position: width }], children: kids }))
         }
+        // same order as the resume: Europass detail, then certification, each on its own line
+        const subs = [detail, cert].filter(Boolean)
+        subs.forEach((t, si) => out.push(new Paragraph({ spacing: { after: si === subs.length - 1 ? 28 : 0 }, children: [new TextRun({ text: t, color: C.muted, size: SIZE.sub })] })))
       }
     } else if (key === 'certificates') {
       out.push(heading(label, C))
-      for (const c of content.certificates) out.push(titleDate([c.name, c.issuer].filter(Boolean).join('  —  '), formatDate(c.date), C, width))
+      for (const c of content.certificates) out.push(titleDate([c.name, c.issuer].filter(Boolean).join('  —  '), formatDate(c.date, dOpts), C, width))
     } else if (key === 'awards') {
       out.push(heading(label, C))
       for (const a of content.awards) {
-        out.push(titleDate([a.title, a.awarder].filter(Boolean).join('  —  '), formatDate(a.date), C, width))
+        out.push(titleDate([a.title, a.awarder].filter(Boolean).join('  —  '), formatDate(a.date, dOpts), C, width))
         if (has(a.summary)) out.push(...summaryParas(a.summary, C))
       }
     } else if (key === 'publications') {
       out.push(heading(label, C))
       for (const p of content.publications) {
-        out.push(titleDate([p.name, p.publisher].filter(Boolean).join('  —  '), formatDate(p.releaseDate), C, width))
+        out.push(titleDate([p.name, p.publisher].filter(Boolean).join('  —  '), formatDate(p.releaseDate, dOpts), C, width))
         if (has(p.summary)) out.push(...summaryParas(p.summary, C))
       }
     } else if (key === 'volunteer') {
       out.push(heading(label, C))
       for (const v of content.volunteer) {
-        out.push(titleDate(v.position || v.organization || 'Role', formatDateRange(v.startDate, v.endDate), C, width))
+        out.push(titleDate(v.position || v.organization || 'Role', formatDateRange(v.startDate, v.endDate, dOpts), C, width))
         if (v.position && v.organization) out.push(sub(v.organization, C))
         if (has(v.summary)) out.push(...summaryParas(v.summary, C))
         out.push(...bulletsOf(v.highlights ?? [], C))
@@ -303,7 +314,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
       if (!section || !section.items.length) continue
       out.push(heading(label, C))
       for (const it of section.items) {
-        out.push(titleDate(it.name || '', formatDate(it.date), C, width))
+        out.push(titleDate(it.name || '', formatDate(it.date, dOpts), C, width))
         const s = [it.subtitle, it.location].filter(Boolean).join('  ·  ')
         if (s) out.push(sub(s, C))
         if (has(it.summary)) out.push(...summaryParas(it.summary, C))
@@ -417,9 +428,9 @@ export async function exportDocumentDocx(doc: ResumeDocument, filename?: string,
   }
 
   const document = new Document({
-    creator: 'CVAurum',
+    creator: 'CVPyrites',
     title: doc.title,
-    description: 'Resume exported from CVAurum',
+    description: 'Resume exported from CVPyrites',
     background: { color: background },
     styles: {
       default: {

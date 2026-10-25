@@ -1,5 +1,5 @@
 /**
- * The full CVAurum document = JSON Resume content + CVAurum metadata.
+ * The full CVPyrites document = JSON Resume content + CVPyrites metadata.
  */
 import { z } from 'zod'
 import {
@@ -34,9 +34,9 @@ export const ResumeContentSchema = z.object({
   interests: z.array(InterestSchema).default([]),
   references: z.array(ReferenceSchema).default([]),
   projects: z.array(ProjectSchema).default([]),
-  /** CVAurum extension: free-form custom sections */
+  /** CVPyrites extension: free-form custom sections */
   custom: z.array(CustomSectionSchema).default([]),
-  /** CVAurum extension: closing/GDPR-style declaration block */
+  /** CVPyrites extension: closing/GDPR-style declaration block */
   closingStatement: ClosingStatementSchema.default({}),
 })
 

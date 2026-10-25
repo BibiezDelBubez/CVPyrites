@@ -7,7 +7,7 @@ import { Editor } from '@/components/editor/Editor'
 import { useTitle } from '@/lib/useTitle'
 
 export function EditorRoute() {
-  useTitle('Resume Editor · CVAurum')
+  useTitle('Resume Editor · CVPyrites')
   const { id } = useParams<{ id: string }>()
   const load = useResumeStore((s) => s.load)
   const close = useResumeStore((s) => s.close)

@@ -48,6 +48,7 @@ export function applyTemplateToMetadata(cur: Metadata, defaults: TemplateDefault
 
   return defaultMetadata({
     template: defaults.template,
+    locale: cur.locale, // the resume's language is a content choice, never reset by a template
     page: cur.page,
     theme: { ...cur.theme, ...defaults.theme },
     // Adopt the template's typographic identity (fonts, sizes, spacing, case) but

@@ -24,7 +24,7 @@ import { useTitle } from '@/lib/useTitle'
 
 /** The resume library / dashboard (/app). The explainer homepage lives at /. */
 export function Dashboard() {
-  useTitle('Your Resumes · CVAurum')
+  useTitle('Your Resumes · CVPyrites')
   const navigate = useNavigate()
   const library = useAppStore((s) => s.library)
   const refreshLibrary = useAppStore((s) => s.refreshLibrary)

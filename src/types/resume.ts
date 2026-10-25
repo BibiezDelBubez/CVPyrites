@@ -1,10 +1,10 @@
 /**
- * CVAurum data model.
+ * CVPyrites data model.
  *
  * The resume CONTENT follows the JSON Resume schema (https://jsonresume.org/schema)
  * for instant interoperability with the wider ecosystem (importers, validators,
  * hundreds of community themes). Everything visual/structural lives in `metadata`,
- * which is a CVAurum extension (`meta.cvaurum`) so an exported document is still
+ * which is a CVPyrites extension (`meta.cvaurum`) so an exported document is still
  * a valid JSON Resume document.
  *
  * Zod schemas double as runtime validators for safe import of untrusted JSON.
@@ -86,7 +86,7 @@ export const SkillSchema = z.object({
   id: z.string().optional(),
   name: z.string().optional().default(''),
   level: z.string().optional().default(''),
-  /** 0-5 proficiency for visual level meters (CVAurum extension) */
+  /** 0-5 proficiency for visual level meters (CVPyrites extension) */
   rating: z.number().min(0).max(5).optional().catch(undefined),
   keywords: z.array(z.string()).optional().default([]),
 })
@@ -116,12 +116,39 @@ export const PublicationSchema = z.object({
   summary: z.string().optional().default(''),
 })
 
+/** CEFR / QCER level, or mother tongue. */
+export const LanguageLevelSchema = z.enum(['native', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+export type LanguageLevel = z.infer<typeof LanguageLevelSchema>
+/** Plain CEFR level (no "native"), used by the Europass detail grid. */
+export const CefrSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])
+export type Cefr = z.infer<typeof CefrSchema>
+
 export const LanguageSchema = z.object({
   id: z.string().optional(),
   language: z.string().optional().default(''),
   fluency: z.string().optional().default(''),
-  /** 0-5 for visual meters (CVAurum extension) */
+  /** 0-5 for visual meters (CVPyrites extension) */
   rating: z.number().min(0).max(5).optional().catch(undefined),
+  /** CVPyrites extension: CEFR / QCER level (drives the text line and the dots) */
+  level: LanguageLevelSchema.optional().catch(undefined),
+  /** CVPyrites extension: language certification, e.g. IELTS Academic · 7.5 · 2023 */
+  certification: z
+    .object({
+      name: z.string().optional().default(''),
+      score: z.string().optional().default(''),
+      year: z.string().optional().default(''),
+    })
+    .optional()
+    .catch(undefined),
+  /** CVPyrites extension: optional Europass detail per macro-skill (CEFR A1–C2) */
+  europass: z
+    .object({
+      understanding: CefrSchema.optional().catch(undefined),
+      speaking: CefrSchema.optional().catch(undefined),
+      writing: CefrSchema.optional().catch(undefined),
+    })
+    .optional()
+    .catch(undefined),
 })
 
 export const InterestSchema = z.object({
@@ -136,7 +163,7 @@ export const ReferenceSchema = z.object({
   reference: z.string().optional().default(''),
 })
 
-/** Closing/GDPR-style declaration block (CVAurum extension), e.g. the Italian
+/** Closing/GDPR-style declaration block (CVPyrites extension), e.g. the Italian
  *  "autorizzo il trattamento dei dati personali" liberatoria — a single free-text
  *  statement plus the place/date/signature line often appended below it. */
 export const ClosingStatementSchema = z.object({
@@ -158,7 +185,7 @@ export const VolunteerSchema = z.object({
   highlights: z.array(z.string()).optional().default([]),
 })
 
-/** A free-form custom section item (CVAurum extension). */
+/** A free-form custom section item (CVPyrites extension). */
 export const CustomItemSchema = z.object({
   id: z.string().optional(),
   name: z.string().optional().default(''),

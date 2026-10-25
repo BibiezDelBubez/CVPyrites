@@ -150,7 +150,7 @@ const isUpper = (s: string): boolean => {
 
 /**
  * Undo CSS letter-spacing / tracking that surfaces as single spaces between
- * glyphs — premium templates (incl. CVAurum's own export) track headings, so
+ * glyphs — premium templates (incl. CVPyrites's own export) track headings, so
  * "SUMMARY" arrives as "S U M M A RY" and would otherwise defeat heading
  * detection. Only fires when a line is dominated by single-character tokens, so
  * ordinary prose is untouched. A genuine word break in tracked text appears as

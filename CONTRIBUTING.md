@@ -1,6 +1,6 @@
-# Contributing to CVAurum
+# Contributing to CVPyrites
 
-First off — thank you! :tada: CVAurum is **the open-source resume studio**, and it gets better every time someone fixes a typo, polishes a template, files a thoughtful bug report, or ships a brand-new feature. Whether this is your first open-source contribution or your thousandth, you're welcome here.
+First off — thank you! :tada: CVPyrites is **the open-source resume studio**, and it gets better every time someone fixes a typo, polishes a template, files a thoughtful bug report, or ships a brand-new feature. Whether this is your first open-source contribution or your thousandth, you're welcome here.
 
 This guide will get you set up and productive fast. If anything is unclear or out of date, that itself is a great first contribution — open an issue or a PR.
 
@@ -36,7 +36,7 @@ You don't have to write code to make a difference. All of these are genuinely va
 
 - :art: **Add or refine a template** — the single highest-impact, lowest-friction contribution (see below).
 - :bug: **Report bugs** with clear reproduction steps.
-- :bulb: **Suggest features** that fit CVAurum's local-first, zero-backend philosophy.
+- :bulb: **Suggest features** that fit CVPyrites's local-first, zero-backend philosophy.
 - :memo: **Improve docs** — this file, the README, [`docs/TEMPLATES.md`](./docs/TEMPLATES.md), or inline comments.
 - :test_tube: **Triage issues** — reproduce, clarify, and label.
 - :globe_with_meridians: **Help with accessibility and ATS-safety** — these are core to the project's mission.
@@ -45,14 +45,14 @@ You don't have to write code to make a difference. All of these are genuinely va
 
 ## :trophy: The easiest way to contribute: add a template
 
-**Adding a template is the best on-ramp to the codebase.** CVAurum ships with **38 premium, data-driven templates**, and there is always room for more.
+**Adding a template is the best on-ramp to the codebase.** CVPyrites ships with **38 premium, data-driven templates**, and there is always room for more.
 
 Why it's the perfect first contribution:
 
 - Templates are **pure, data-driven rendering** — they read from the resume model and lay it out. No backend, no state plumbing, no migrations.
 - You touch a small, well-isolated surface area: the rendering engine in `src/templates/` plus a config entry in `src/templates/registry.ts` and styling in `src/templates/templates.css`.
 - You get an instant feedback loop — the live WYSIWYG preview updates as you build.
-- It's high-impact: every new template helps every CVAurum user.
+- It's high-impact: every new template helps every CVPyrites user.
 
 :point_right: **Start here:** [`docs/TEMPLATES.md`](./docs/TEMPLATES.md) walks you through the template anatomy, the shared `Artboard` and section renderers under `src/templates/_shared/`, how to register your template in `registry.ts`, how to style it in `templates.css`, and how to flag it as ATS-safe (the shield) when it uses a simple, single-column, parseable layout.
 
@@ -67,7 +67,7 @@ A few things to keep in mind while you build:
 
 ## Development setup
 
-CVAurum's whole pitch is that there is **no backend** — no Docker, no Postgres, no Redis, no Chromium. `npm install && npm run dev` is the entire setup. :sparkles:
+CVPyrites's whole pitch is that there is **no backend** — no Docker, no Postgres, no Redis, no Chromium. `npm install && npm run dev` is the entire setup. :sparkles:
 
 ### Prerequisites
 
@@ -79,14 +79,14 @@ CVAurum's whole pitch is that there is **no backend** — no Docker, no Postgres
 1. **Fork** the repository on GitHub and clone your fork:
 
    ```bash
-   git clone https://github.com/<your-username>/cvaurum.git
-   cd cvaurum
+   git clone https://github.com/<your-username>/CVPyrites.git
+   cd CVPyrites
    ```
 
 2. **Add the upstream remote** so you can keep your fork in sync:
 
    ```bash
-   git remote add upstream https://github.com/akhil-dara/cvaurum.git
+   git remote add upstream https://github.com/BibiezDelBubez/CVPyrites.git
    ```
 
 3. **Install dependencies:**
@@ -124,7 +124,7 @@ Everything lives under `src/`. Here's the lay of the land so you know where to l
 
 ```
 src/
-├── types/        JSON Resume schema + CVAurum metadata, modeled with Zod
+├── types/        JSON Resume schema + CVPyrites metadata, modeled with Zod
 ├── data/         fonts registry, sample resume, app defaults
 ├── store/        Zustand stores — resume (with undo/redo), app/settings, editor UI
 ├── lib/          core logic, no React:
@@ -150,7 +150,7 @@ src/
 └── styles/       artboard.css (resume base styles), print.css
 ```
 
-**The data contract:** CVAurum speaks the [JSON Resume schema](https://jsonresume.org/schema), with CVAurum-specific visual metadata namespaced under `meta.cvaurum`. This keeps exports round-tripping cleanly with the wider JSON Resume ecosystem. When you change the resume model, change it in `src/types/` (Zod) so imports stay safely validated.
+**The data contract:** CVPyrites speaks the [JSON Resume schema](https://jsonresume.org/schema), with CVPyrites-specific visual metadata namespaced under `meta.cvaurum` (namespace kept from upstream CVAurum for compatibility). This keeps exports round-tripping cleanly with the wider JSON Resume ecosystem. When you change the resume model, change it in `src/types/` (Zod) so imports stay safely validated.
 
 **Where things tend to live:**
 
@@ -189,7 +189,7 @@ We keep the bar high but the rules simple.
 
 ### Philosophy guardrails
 
-Before adding a dependency or feature, sanity-check it against CVAurum's identity:
+Before adding a dependency or feature, sanity-check it against CVPyrites's identity:
 
 - :no_entry_sign: **No backend.** Nothing that requires a server, database, or build-time secret.
 - :lock: **Privacy first.** No analytics, no tracking, no cookies, no phoning home. Data stays in the user's browser.
@@ -258,7 +258,7 @@ If `npm run build` succeeds, you've cleared the most important gate — it both 
 
 - **Search existing issues first** to avoid duplicates.
 - For **bugs**, include: what you did, what you expected, what happened, your browser and OS, and a minimal reproduction. Since data lives in IndexedDB, note whether clearing site data changes the behavior.
-- For **features**, describe the problem you're trying to solve and how it fits CVAurum's local-first, zero-backend, privacy-first philosophy.
+- For **features**, describe the problem you're trying to solve and how it fits CVPyrites's local-first, zero-backend, privacy-first philosophy.
 
 Use the issue templates where available — they prompt for exactly what we need.
 
@@ -266,18 +266,18 @@ Use the issue templates where available — they prompt for exactly what we need
 
 ## A note on privacy
 
-CVAurum is **100% local, private, and free** — no account, no server, no tracking. When you contribute, please uphold that promise:
+CVPyrites is **100% local, private, and free** — no account, no server, no tracking. When you contribute, please uphold that promise:
 
 - Don't add analytics, telemetry, or third-party trackers.
 - Don't introduce server round-trips or external requests. The app currently makes **zero outbound calls** — fonts are bundled and all data stays in the browser. Keep it that way; if you add a feature that needs the network, it must be off by default and clearly disclosed.
 
-If a change would weaken these guarantees, it's almost certainly not the right change for CVAurum.
+If a change would weaken these guarantees, it's almost certainly not the right change for CVPyrites.
 
 ---
 
 ## License
 
-By contributing to CVAurum, you agree that your contributions will be licensed under the project's [MIT License](./LICENSE).
+By contributing to CVPyrites, you agree that your contributions will be licensed under the project's [MIT License](./LICENSE).
 
 ---
 

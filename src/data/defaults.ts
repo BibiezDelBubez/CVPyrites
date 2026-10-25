@@ -27,6 +27,7 @@ export const DEFAULT_TWO_COL_MAIN = ['summary', 'work', 'projects', 'education',
 
 export interface MetadataOverrides {
   template?: string
+  locale?: Metadata['locale']
   page?: Partial<Metadata['page']>
   theme?: Partial<Metadata['theme']>
   typography?: Partial<Metadata['typography']>

@@ -13,8 +13,8 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'icon.svg'],
       manifest: {
         id: '/',
-        name: 'CVAurum — Free Open-Source Resume Builder',
-        short_name: 'CVAurum',
+        name: 'CVPyrites — Free Open-Source Resume Builder',
+        short_name: 'CVPyrites',
         description: 'Free, open-source, 100% local resume builder. 38 ATS-ready templates, a built-in ATS score, PDF résumé import, and PDF / Word / JSON export — no account, fully offline.',
         categories: ['productivity', 'business', 'utilities'],
         theme_color: '#d4982f',

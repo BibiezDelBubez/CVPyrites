@@ -381,6 +381,18 @@
 .rm-mini:last-child { margin-bottom: 0; }
 .rm-mini-title { font-weight: 600; }
 .rm-mini-sub { color: var(--rm-muted); font-size: calc(var(--rm-fs) * 0.92); }
+/* CVPyrites: language line — name left, "C1 – Avanzato · IELTS 7.5 (2023)" right
+   (stacked under the name in a narrow sidebar). */
+.rm-lang-level { display: inline-flex; align-items: center; gap: 8px; text-align: right; }
+.rm-col-aside .rm-lang-row { flex-direction: column; align-items: flex-start; gap: 0.1em; }
+.rm-col-aside .rm-lang-level { text-align: left; flex-wrap: wrap; }
+.rm-lang-edit { color: var(--rm-muted); font-size: calc(var(--rm-fs) * 0.92); text-align: inherit; }
+.rm-col-aside .rm-lang-edit { color: inherit; }
+.rm-lang-hint { opacity: 0.55; font-style: italic; }
+/* certification on its own line under the language, quieter than the level */
+.rm-lang-cert { color: var(--rm-muted); font-size: calc(var(--rm-fs) * 0.88); margin-top: 0.05em; }
+.rm-col-aside .rm-lang-cert { color: color-mix(in srgb, currentColor 75%, transparent); }
+.rm-lang-cert-edit { font-size: inherit; text-align: left; padding-left: 0; }
 
 /* aside variant: lighten rules/headers against dark sidebar */
 .rm-col-aside .rm-section-title { color: inherit; border-color: color-mix(in srgb, currentColor 35%, transparent); }
@@ -573,6 +585,10 @@
 }
 .mode-preview .rm-add-btn:hover {
   opacity: 1;
+}
+/* CVPyrites: "+ riepilogo" sits next to "+ bullet" in the same row. */
+.mode-preview .rm-add-btn + .rm-add-btn {
+  margin-left: 0.45em;
 }
 
 /* Signature image (Closing Statement). */

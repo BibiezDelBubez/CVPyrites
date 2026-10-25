@@ -5,7 +5,7 @@
  * (<Ed>) and write straight back to the store; otherwise they render plain so
  * print/thumbnail stay clean.
  */
-import { useEffect, useRef, type ReactNode, type FocusEvent } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type FocusEvent } from 'react'
 import { X } from 'lucide-react'
 import type { ResumeDocument } from '@/types/document'
 import type { TemplateConfig } from '@/types/template'
@@ -15,25 +15,29 @@ import { downscaleDataUrl } from '@/lib/image'
 import { Chips, Dots, LevelBar, Stars, RichText, prettyUrl } from './atoms'
 import { Ed, type EditFn } from './Editable'
 import { CanvasDate } from './CanvasDate'
+import { CanvasLangLevel } from './CanvasLangLevel'
+import { LEVEL_DOTS_MAX, certificationText, effectiveLevel, europassText, langDisplay, levelDots, levelLine } from '@/lib/languages'
 
 const has = (s?: string) => !!s && htmlToText(s).length > 0
 
 /** Per-section visibility overrides (undefined = shown). */
-export type SecOpts = { showBullets?: boolean; showDates?: boolean; showLocation?: boolean; showSummary?: boolean; showKeywords?: boolean }
+export type SecOpts = { showBullets?: boolean; showDates?: boolean; showLocation?: boolean; showSummary?: boolean; showKeywords?: boolean; langMeter?: boolean; langDescriptor?: boolean }
 const show = (v?: boolean) => v !== false
 
 type Apply = (c: ResumeDocument['content'], v: string) => void
 /** A date range that's click-to-edit on the canvas (and plain text in print). */
-function rangeDate(edit: EditFn | undefined, visible: boolean, start: string, end: string, applyStart: Apply, applyEnd: Apply): ReactNode {
+function rangeDate(doc: ResumeDocument, edit: EditFn | undefined, visible: boolean, start: string, end: string, applyStart: Apply, applyEnd: Apply): ReactNode {
   if (!visible) return undefined
-  if (!edit) return formatDateRange(start, end) || undefined
-  return <CanvasDate edit={edit} range start={start} end={end} applyStart={applyStart} applyEnd={applyEnd} />
+  const locale = doc.metadata.locale
+  if (!edit) return formatDateRange(start, end, { locale }) || undefined
+  return <CanvasDate edit={edit} locale={locale} range start={start} end={end} applyStart={applyStart} applyEnd={applyEnd} />
 }
 /** A single date that's click-to-edit on the canvas. */
-function singleDate(edit: EditFn | undefined, visible: boolean, date: string, applyDate: Apply): ReactNode {
+function singleDate(doc: ResumeDocument, edit: EditFn | undefined, visible: boolean, date: string, applyDate: Apply): ReactNode {
   if (!visible) return undefined
-  if (!edit) return date ? formatDate(date) : undefined
-  return <CanvasDate edit={edit} start={date} applyStart={applyDate} />
+  const locale = doc.metadata.locale
+  if (!edit) return date ? formatDate(date, { locale }) : undefined
+  return <CanvasDate edit={edit} locale={locale} start={date} applyStart={applyDate} />
 }
 
 type ProfStyle = 'dots' | 'bars' | 'stars' | 'text' | 'none'
@@ -54,6 +58,7 @@ function Bullets({
   onRemove,
   onInsertAfter,
   onPruneEmpty,
+  extraActions,
 }: {
   items: string[]
   edit?: EditFn
@@ -62,6 +67,8 @@ function Bullets({
   onRemove?: (bi: number) => void
   onInsertAfter?: (bi: number) => void
   onPruneEmpty?: () => void
+  /** extra add-buttons shown in the same row as "+ bullet" (edit mode only) */
+  extraActions?: ReactNode
 }) {
   const ulRef = useRef<HTMLUListElement>(null)
   const pendingFocus = useRef<number | null>(null)
@@ -145,6 +152,7 @@ function Bullets({
           >
             + bullet
           </button>
+          {extraActions}
         </li>
       )}
     </ul>
@@ -272,21 +280,55 @@ function Summary({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
 }
 
 function Work({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opts?: SecOpts }) {
+  // CVPyrites: an empty role summary no longer shows a placeholder line on every
+  // entry. It appears only when it has text, or after "+ summary" is clicked
+  // (and while it's being edited, so clearing it mid-typing doesn't yank it away).
+  const [openSummary, setOpenSummary] = useState<string | null>(null)
+  const focusSummary = useRef<string | null>(null)
+  const it = doc.metadata.locale !== 'en'
+  const addSummaryLabel = it ? '+ riepilogo' : '+ summary'
+  const summaryPlaceholder = it ? 'Breve riepilogo del ruolo…' : 'One-line role summary…'
   return (
     <>
-      {doc.content.work.map((w, i) => (
+      {doc.content.work.map((w, i) => {
+        const sid = w.id ?? String(i)
+        const summaryOn = show(opts?.showSummary)
+        const summaryVisible = summaryOn && (has(w.summary) || (!!edit && openSummary === sid))
+        const addSummaryBtn =
+          edit && summaryOn && !summaryVisible ? (
+            <button
+              type="button"
+              className="rm-add-btn rm-add-btn-secondary"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => { focusSummary.current = sid; setOpenSummary(sid) }}
+              title={it ? 'Aggiungi un breve riepilogo del ruolo' : 'Add a one-line role summary'}
+            >
+              {addSummaryLabel}
+            </button>
+          ) : null
+        return (
         <article className="rm-item rm-keep" key={w.id}>
           <ItemHead
             title={<Ed edit={edit} value={w.position} apply={(c, v) => { c.work[i].position = v }} placeholder="Job title" />}
-            date={rangeDate(edit, show(opts?.showDates), w.startDate, w.endDate, (c, v) => { c.work[i].startDate = v }, (c, v) => { c.work[i].endDate = v })}
+            date={rangeDate(doc, edit, show(opts?.showDates), w.startDate, w.endDate, (c, v) => { c.work[i].startDate = v }, (c, v) => { c.work[i].endDate = v })}
           />
           <div className="rm-item-sub">
             <Ed edit={edit} value={w.name} apply={(c, v) => { c.work[i].name = v }} className="rm-item-org" placeholder="Company" />
-            {show(opts?.showLocation) && (edit || w.location) ? <Ed edit={edit} value={w.location} apply={(c, v) => { c.work[i].location = v }} className="rm-item-loc" placeholder="Location" /> : null}
+            {show(opts?.showLocation) && (edit || w.location) ? <Ed edit={edit} value={w.location} apply={(c, v) => { c.work[i].location = v }} className="rm-item-loc" placeholder={doc.metadata.locale === 'en' ? 'City (Country)' : 'Città (Paese)'} /> : null}
           </div>
-          {show(opts?.showSummary) && (edit || has(w.summary)) ? (
-            <div className="rm-item-summary">
-              <Ed edit={edit} value={w.summary} rich multiline as="div" apply={(c, v) => { c.work[i].summary = v }} placeholder="One-line role summary…" />
+          {summaryVisible ? (
+            <div
+              className="rm-item-summary"
+              ref={(el) => {
+                if (el && focusSummary.current === sid) {
+                  focusSummary.current = null
+                  el.querySelector<HTMLElement>('.rm-editable')?.focus()
+                }
+              }}
+              onFocus={edit ? () => setOpenSummary(sid) : undefined}
+              onBlur={edit ? () => setOpenSummary((cur) => (cur === sid ? null : cur)) : undefined}
+            >
+              <Ed edit={edit} value={w.summary} rich multiline as="div" apply={(c, v) => { c.work[i].summary = v }} placeholder={summaryPlaceholder} />
             </div>
           ) : null}
           {show(opts?.showBullets) ? (
@@ -298,10 +340,14 @@ function Work({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opts?: 
               onRemove={edit ? (bi) => edit((c) => { c.work[i].highlights.splice(bi, 1) }) : undefined}
               onInsertAfter={edit ? (bi) => edit((c) => { c.work[i].highlights.splice(bi + 1, 0, '') }) : undefined}
               onPruneEmpty={edit ? () => edit((c) => { c.work[i].highlights = c.work[i].highlights.filter((h) => htmlToText(h).trim().length > 0) }) : undefined}
+              extraActions={addSummaryBtn}
             />
+          ) : addSummaryBtn ? (
+            <div className="rm-add-entry-row no-print" contentEditable={false}>{addSummaryBtn}</div>
           ) : null}
         </article>
-      ))}
+        )
+      })}
     </>
   )
 }
@@ -315,11 +361,11 @@ function Education({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; op
           <article className="rm-item rm-keep" key={e.id}>
             <ItemHead
               title={edit ? <Ed edit={edit} value={e.area} apply={(c, v) => { c.education[i].area = v }} placeholder="Field of study" /> : title}
-              date={rangeDate(edit, show(opts?.showDates), e.startDate, e.endDate, (c, v) => { c.education[i].startDate = v }, (c, v) => { c.education[i].endDate = v })}
+              date={rangeDate(doc, edit, show(opts?.showDates), e.startDate, e.endDate, (c, v) => { c.education[i].startDate = v }, (c, v) => { c.education[i].endDate = v })}
             />
             <div className="rm-item-sub">
               <Ed edit={edit} value={e.institution} apply={(c, v) => { c.education[i].institution = v }} className="rm-item-org" placeholder="Institution" />
-              {show(opts?.showLocation) && (edit || e.location) ? <Ed edit={edit} value={e.location} apply={(c, v) => { c.education[i].location = v }} className="rm-item-loc" placeholder="Location" /> : null}
+              {show(opts?.showLocation) && (edit || e.location) ? <Ed edit={edit} value={e.location} apply={(c, v) => { c.education[i].location = v }} className="rm-item-loc" placeholder={doc.metadata.locale === 'en' ? 'City (Country)' : 'Città (Paese)'} /> : null}
               {edit || e.score ? <Ed edit={edit} value={e.score} apply={(c, v) => { c.education[i].score = v }} placeholder="GPA" /> : null}
             </div>
             {has(e.summary) ? <RichText html={e.summary} /> : null}
@@ -338,7 +384,7 @@ function Projects({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opt
         <article className="rm-item rm-keep" key={p.id}>
           <ItemHead
             title={edit ? <Ed edit={edit} value={p.name} apply={(c, v) => { c.projects[i].name = v }} placeholder="Project name" /> : safeHref(p.url) ? <a href={safeHref(p.url)}>{p.name}</a> : p.name}
-            date={rangeDate(edit, show(opts?.showDates), p.startDate, p.endDate, (c, v) => { c.projects[i].startDate = v }, (c, v) => { c.projects[i].endDate = v })}
+            date={rangeDate(doc, edit, show(opts?.showDates), p.startDate, p.endDate, (c, v) => { c.projects[i].startDate = v }, (c, v) => { c.projects[i].endDate = v })}
           />
           {edit ? (
             <div className="rm-item-link">
@@ -428,30 +474,44 @@ function Skills({ doc, config, edit }: { doc: ResumeDocument; config: TemplateCo
   )
 }
 
-function Languages({ doc, edit }: { doc: ResumeDocument; config: TemplateConfig; edit?: EditFn }) {
-  const prof = doc.metadata.typography.proficiency as ProfStyle
-  const meter = prof === 'dots' || prof === 'bars' || prof === 'stars'
+/**
+ * CVPyrites: one plain-text line per language ("Inglese   C1 – Avanzato · IELTS
+ * Academic 7.5 (2023)") so both recruiters and ATS read it. Dots are optional
+ * decoration derived from the level (section gear → "Pallini"). Old entries with
+ * only a 0–5 rating and no text keep their dots so nothing disappears.
+ */
+function Languages({ doc, edit, opts }: { doc: ResumeDocument; config: TemplateConfig; edit?: EditFn; opts?: SecOpts }) {
+  const locale = doc.metadata.locale
+  const disp = langDisplay(opts)
+  const it = locale !== 'en'
   return (
     <>
-      {doc.content.languages.map((l, i) => (
-        <div className="rm-mini" key={l.id}>
-          {meter && typeof l.rating === 'number' ? (
-            <div className="rm-level">
-              {edit ? (
-                <Ed edit={edit} value={l.language} apply={(c, v) => { c.languages[i].language = v }} className="rm-mini-title" placeholder="Language" />
-              ) : (
-                <span className="rm-mini-title" style={{ minWidth: '45%' }}>{l.language}</span>
-              )}
-              <Proficiency rating={l.rating} style={prof} />
+      {doc.content.languages.map((l, i) => {
+        const level = levelLine(l, locale, disp.descriptor)
+        const cert = certificationText(l, locale)
+        const detail = europassText(l, locale)
+        // an entry added but never filled in stays off the printed resume
+        if (!edit && !(l.language || '').trim() && !level && !cert && !detail) return null
+        const lvl = effectiveLevel(l)
+        const legacyDots = !level && typeof l.rating === 'number'
+        const dots = lvl && disp.meter ? <Dots value={levelDots(lvl)} max={LEVEL_DOTS_MAX} /> : legacyDots ? <Dots value={l.rating} /> : null
+        const popover = (label: string, cls?: string) => (
+          <CanvasLangLevel edit={edit!} index={i} label={label} level={l.level} fluency={l.fluency} certification={l.certification} europass={l.europass} locale={locale} className={cls} />
+        )
+        return (
+          <div className="rm-mini rm-lang" key={l.id ?? i}>
+            <div className="rm-item-head rm-lang-row">
+              <Ed edit={edit} value={l.language} apply={(c, v) => { c.languages[i].language = v }} className="rm-mini-title" placeholder={it ? 'Lingua' : 'Language'} />
+              <span className="rm-lang-level">
+                {edit ? popover(level) : level ? <span className="rm-mini-sub">{level}</span> : null}
+                {dots}
+              </span>
             </div>
-          ) : (
-            <div className="rm-item-head">
-              <Ed edit={edit} value={l.language} apply={(c, v) => { c.languages[i].language = v }} className="rm-mini-title" placeholder="Language" />
-              {prof !== 'none' && (edit || l.fluency) ? <Ed edit={edit} value={l.fluency} apply={(c, v) => { c.languages[i].fluency = v }} className="rm-mini-sub" placeholder="Fluency" /> : null}
-            </div>
-          )}
-        </div>
-      ))}
+            {detail ? <div className="rm-lang-cert rm-lang-detail">{edit ? popover(detail, 'rm-lang-cert-edit') : detail}</div> : null}
+            {cert ? <div className="rm-lang-cert">{edit ? popover(cert, 'rm-lang-cert-edit') : cert}</div> : null}
+          </div>
+        )
+      })}
     </>
   )
 }
@@ -463,7 +523,7 @@ function Certificates({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
         <div className="rm-mini" key={cert.id}>
           <div className="rm-item-head">
             <span className="rm-mini-title">{edit ? <Ed edit={edit} value={cert.name} apply={(c, v) => { c.certificates[i].name = v }} placeholder="Certificate" /> : safeHref(cert.url) ? <a href={safeHref(cert.url)}>{cert.name}</a> : cert.name}</span>
-            {edit || cert.date ? <span className="rm-item-date">{singleDate(edit, true, cert.date, (c, v) => { c.certificates[i].date = v })}</span> : null}
+            {edit || cert.date ? <span className="rm-item-date">{singleDate(doc, edit, true, cert.date, (c, v) => { c.certificates[i].date = v })}</span> : null}
           </div>
           {edit || cert.issuer ? <Ed edit={edit} value={cert.issuer} apply={(c, v) => { c.certificates[i].issuer = v }} className="rm-mini-sub" placeholder="Issuer" /> : null}
         </div>
@@ -479,7 +539,7 @@ function Awards({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
         <div className="rm-mini" key={a.id}>
           <div className="rm-item-head">
             <Ed edit={edit} value={a.title} apply={(c, v) => { c.awards[i].title = v }} className="rm-mini-title" placeholder="Award" />
-            {edit || a.date ? <span className="rm-item-date">{singleDate(edit, true, a.date, (c, v) => { c.awards[i].date = v })}</span> : null}
+            {edit || a.date ? <span className="rm-item-date">{singleDate(doc, edit, true, a.date, (c, v) => { c.awards[i].date = v })}</span> : null}
           </div>
           {edit || a.awarder ? <Ed edit={edit} value={a.awarder} apply={(c, v) => { c.awards[i].awarder = v }} className="rm-mini-sub" placeholder="Awarder" /> : null}
           {has(a.summary) ? <RichText html={a.summary} /> : null}
@@ -496,7 +556,7 @@ function Publications({ doc, edit }: { doc: ResumeDocument; edit?: EditFn }) {
         <div className="rm-mini" key={p.id}>
           <div className="rm-item-head">
             <span className="rm-mini-title">{edit ? <Ed edit={edit} value={p.name} apply={(c, v) => { c.publications[i].name = v }} placeholder="Title" /> : safeHref(p.url) ? <a href={safeHref(p.url)}>{p.name}</a> : p.name}</span>
-            {edit || p.releaseDate ? <span className="rm-item-date">{singleDate(edit, true, p.releaseDate, (c, v) => { c.publications[i].releaseDate = v })}</span> : null}
+            {edit || p.releaseDate ? <span className="rm-item-date">{singleDate(doc, edit, true, p.releaseDate, (c, v) => { c.publications[i].releaseDate = v })}</span> : null}
           </div>
           {edit || p.publisher ? <Ed edit={edit} value={p.publisher} apply={(c, v) => { c.publications[i].publisher = v }} className="rm-mini-sub" placeholder="Publisher" /> : null}
           {has(p.summary) ? <RichText html={p.summary} /> : null}
@@ -513,7 +573,7 @@ function Volunteer({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; op
         <article className="rm-item rm-keep" key={v.id}>
           <ItemHead
             title={<Ed edit={edit} value={v.position} apply={(c, val) => { c.volunteer[i].position = val }} placeholder="Role" />}
-            date={rangeDate(edit, show(opts?.showDates), v.startDate, v.endDate, (c, val) => { c.volunteer[i].startDate = val }, (c, val) => { c.volunteer[i].endDate = val })}
+            date={rangeDate(doc, edit, show(opts?.showDates), v.startDate, v.endDate, (c, val) => { c.volunteer[i].startDate = val }, (c, val) => { c.volunteer[i].endDate = val })}
           />
           {edit || v.organization ? (
             <div className="rm-item-sub">
@@ -663,12 +723,12 @@ function Custom({ doc, sectionKey, edit, opts }: { doc: ResumeDocument; sectionK
         <article className="rm-item rm-keep" key={it.id}>
           <ItemHead
             title={<Ed edit={edit} value={it.name} apply={(c, v) => { c.custom[secIndex].items[i].name = v }} placeholder="Title" />}
-            date={singleDate(edit, show(opts?.showDates), it.date ?? '', (c, v) => { c.custom[secIndex].items[i].date = v })}
+            date={singleDate(doc, edit, show(opts?.showDates), it.date ?? '', (c, v) => { c.custom[secIndex].items[i].date = v })}
           />
           {edit || it.subtitle || it.location ? (
             <div className="rm-item-sub">
               <Ed edit={edit} value={it.subtitle ?? ''} apply={(c, v) => { c.custom[secIndex].items[i].subtitle = v }} className="rm-item-org" placeholder="Subtitle" />
-              {show(opts?.showLocation) && (edit || it.location) ? <Ed edit={edit} value={it.location ?? ''} apply={(c, v) => { c.custom[secIndex].items[i].location = v }} className="rm-item-loc" placeholder="Location" /> : null}
+              {show(opts?.showLocation) && (edit || it.location) ? <Ed edit={edit} value={it.location ?? ''} apply={(c, v) => { c.custom[secIndex].items[i].location = v }} className="rm-item-loc" placeholder={doc.metadata.locale === 'en' ? 'City (Country)' : 'Città (Paese)'} /> : null}
             </div>
           ) : null}
           {has(it.summary) ? (
@@ -723,7 +783,7 @@ function sectionRenderer(sectionKey: string, doc: ResumeDocument, config: Templa
     case 'skills':
       return <Skills doc={doc} config={config} edit={edit} />
     case 'languages':
-      return <Languages doc={doc} config={config} edit={edit} />
+      return <Languages doc={doc} config={config} edit={edit} opts={opts} />
     case 'certificates':
       return <Certificates doc={doc} edit={edit} />
     case 'awards':

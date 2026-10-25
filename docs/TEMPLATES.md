@@ -1,10 +1,10 @@
 # Authoring Templates
 
-This guide explains how CVAurum templates work and walks you through building a new
+This guide explains how CVPyrites templates work and walks you through building a new
 one from scratch. By the end you will have added a brand-new resume design to the
 template gallery — **without writing a single line of React**.
 
-> **TL;DR** — A template in CVAurum is **pure data**. You add one `TemplateConfig`
+> **TL;DR** — A template in CVPyrites is **pure data**. You add one `TemplateConfig`
 > object to [`src/templates/registry.ts`](../src/templates/registry.ts) and (optionally)
 > a small scoped CSS block to [`src/templates/templates.css`](../src/templates/templates.css).
 > The shared rendering engine does everything else.
@@ -31,10 +31,10 @@ template gallery — **without writing a single line of React**.
 ## The big idea: templates are data, not code
 
 Most resume builders implement each template as a bespoke React component. That makes
-templates expensive to write, hard to keep consistent, and easy to break. CVAurum takes
+templates expensive to write, hard to keep consistent, and easy to break. CVPyrites takes
 the opposite approach.
 
-Every CVAurum template is described by **one plain object** — a `TemplateConfig`. That
+Every CVPyrites template is described by **one plain object** — a `TemplateConfig`. That
 object is a set of high-level flags ("center the header", "render skills as chips", "use a
 left sidebar") plus a bundle of design defaults (colors, fonts, spacing). A single shared
 engine, [`src/templates/_shared/Artboard.tsx`](../src/templates/_shared/Artboard.tsx),

@@ -1,5 +1,5 @@
 {
-  // CVAurum is a static, client-side SPA — no Worker code, just the built assets.
+  // CVPyrites is a static, client-side SPA — no Worker code, just the built assets.
   // This config makes `wrangler deploy` upload dist/ as static assets (with SPA
   // routing), so it does NOT try to auto-configure the Vite plugin (which would
   // require Vite >= 6). `dist/_headers` (CSP) is served from the assets directory.

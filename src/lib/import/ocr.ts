@@ -8,7 +8,7 @@
  *
  * Privacy: the Tesseract worker, wasm core and English model are all SELF-HOSTED
  * under /ocr/ (see public/ocr). Nothing is fetched from a CDN and the résumé
- * never leaves the device — identical guarantees to the rest of CVAurum. The
+ * never leaves the device — identical guarantees to the rest of CVPyrites. The
  * engine (~6MB wasm + ~2MB model) is lazy-loaded only when a low-text page is
  * actually encountered, so normal text PDFs never pay for it.
  *

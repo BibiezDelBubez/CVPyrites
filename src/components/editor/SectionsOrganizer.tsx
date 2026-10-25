@@ -14,7 +14,7 @@ import {
 import type { ResumeDocument } from '@/types/document'
 import { useResumeStore } from '@/store/useResumeStore'
 import { uid, cn } from '@/lib/utils'
-import { BODY_SECTION_KEYS, DEFAULT_LABELS, customKey, sectionLabel } from '@/lib/sections'
+import { BODY_SECTION_KEYS, customKey, defaultLabel, sectionLabel } from '@/lib/sections'
 import { sectionIconFor } from '@/components/icons/sectionIcons'
 import { SectionBoard } from './SectionBoard'
 import { SectionItemsEditor } from './SectionItemEditors'
@@ -80,7 +80,7 @@ export function SectionsOrganizer({ doc }: { doc: ResumeDocument }) {
       })
     } else {
       updateMetadata((m) => {
-        if (label.trim() && label !== DEFAULT_LABELS[key]) m.layout.headings[key] = label
+        if (label.trim() && label !== defaultLabel(key, m.locale)) m.layout.headings[key] = label
         else delete m.layout.headings[key]
       })
     }

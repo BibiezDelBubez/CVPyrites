@@ -18,6 +18,7 @@ import {
 } from '@/lib/storage'
 import type { JobApplication } from '@/types/tracker'
 
+// Kept as 'cvaurum' on purpose: changing it would reject every backup made before the rename.
 const APP = 'cvaurum'
 const KIND = 'full-backup'
 const SCHEMA_VERSION = 1
@@ -45,7 +46,7 @@ export async function exportFullBackup(): Promise<number> {
     tracker,
   }
   const stamp = new Date().toISOString().slice(0, 10)
-  downloadBlob(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }), `cvaurum-backup-${stamp}.json`)
+  downloadBlob(new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' }), `cvpyrites-backup-${stamp}.json`)
   return resumes.length
 }
 
@@ -70,10 +71,10 @@ export async function importFullBackup(file: File, mode: 'merge' | 'replace' = '
   }
   const obj = (raw ?? {}) as Record<string, unknown>
   if (obj.app !== APP || obj.kind !== KIND) {
-    throw new Error('That is not a CVAurum backup file. Use “Export backup” to create one.')
+    throw new Error('That is not a CVPyrites backup file. Use “Export backup” to create one.')
   }
   if (typeof obj.schemaVersion === 'number' && obj.schemaVersion > SCHEMA_VERSION) {
-    throw new Error('This backup was created by a newer version of CVAurum.')
+    throw new Error('This backup was created by a newer version of CVPyrites.')
   }
 
   const resumes: ResumeDocument[] = (Array.isArray(obj.resumes) ? obj.resumes : [])

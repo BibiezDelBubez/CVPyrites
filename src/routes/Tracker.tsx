@@ -24,7 +24,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { useTitle } from '@/lib/useTitle'
 
 export function Tracker() {
-  useTitle('Job Application Tracker · CVAurum')
+  useTitle('Job Application Tracker · CVPyrites')
   const [apps, setApps] = useState<JobApplication[]>([])
   const [loaded, setLoaded] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)

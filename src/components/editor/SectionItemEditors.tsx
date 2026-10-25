@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { GripVertical, Trash2, Plus, ChevronDown, ImagePlus, X } from 'lucide-react'
 import { useResumeStore } from '@/store/useResumeStore'
+import type { CvLocale } from '@/types/metadata'
+import { CEFR_ONLY, CERTIFICATION_SUGGESTIONS, EUROPASS_SKILLS, LANGUAGE_LEVELS, LANGUAGE_SUGGESTIONS, europassSkillLabel, levelText } from '@/lib/languages'
 import type { ResumeContent, ResumeDocument } from '@/types/document'
 import { cn } from '@/lib/utils'
 import { newItem, ADD_LABEL } from '@/lib/sections'
@@ -13,8 +15,6 @@ import { BulletsEditor } from './fields/BulletsEditor'
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyItem = Record<string, any>
 
-/** Common language fluency levels (CEFR-ish), offered as a dropdown. */
-const FLUENCY_LEVELS = ['Native', 'Fluent', 'Professional', 'Conversational', 'Intermediate', 'Basic']
 
 function itemTitle(sectionKey: string, it: AnyItem): string {
   switch (sectionKey) {
@@ -57,6 +57,8 @@ function itemSubtitle(sectionKey: string, it: AnyItem): string {
       return it.issuer
     case 'awards':
       return it.awarder
+    case 'languages':
+      return it.level ? levelText(it.level, 'it', false) : it.fluency || ''
     default:
       return ''
   }
@@ -166,7 +168,7 @@ export function SectionItemsEditor({ doc, sectionKey }: { doc: ResumeDocument; s
                 </div>
                 {open && (
                   <div className="space-y-3 border-t border-border p-3">
-                    <ItemFields sectionKey={sectionKey} item={it} patch={(fn) => patchById(id, fn)} />
+                    <ItemFields sectionKey={sectionKey} item={it} patch={(fn) => patchById(id, fn)} locale={doc.metadata.locale} />
                   </div>
                 )}
               </div>
@@ -253,7 +255,7 @@ function SignaturePicker({ image, onPick }: { image?: string; onPick: (v: string
   )
 }
 
-function ItemFields({ sectionKey, item, patch }: { sectionKey: string; item: AnyItem; patch: (fn: (it: AnyItem) => void) => void }) {
+function ItemFields({ sectionKey, item, patch, locale }: { sectionKey: string; item: AnyItem; patch: (fn: (it: AnyItem) => void) => void; locale?: CvLocale }) {
   const set = (key: string) => (v: any) => patch((it) => { it[key] = v })
 
   switch (sectionKey) {
@@ -265,7 +267,7 @@ function ItemFields({ sectionKey, item, patch }: { sectionKey: string; item: Any
             <TextField label="Company" value={item.name} onChange={set('name')} placeholder="Vertex Labs" />
           </Row>
           <Row>
-            <TextField label="Location" value={item.location} onChange={set('location')} placeholder="San Francisco, CA" />
+            <TextField label="Location" value={item.location} onChange={set('location')} placeholder={locale === 'en' ? 'City (Country)' : 'Città (Paese)'} hint={locale === 'en' ? 'Abroad? Always add the country: “Munich (Germany)”.' : 'All’estero? Indica sempre il Paese: “Monaco di Baviera (Germania)”.'} />
             <div className="grid grid-cols-2 gap-2">
               <DateField label="Start" value={item.startDate} onChange={set('startDate')} />
               <DateField label="End" value={item.endDate} onChange={set('endDate')} allowPresent />
@@ -277,7 +279,13 @@ function ItemFields({ sectionKey, item, patch }: { sectionKey: string; item: Any
     case 'education':
       return (
         <>
-          <TextField label="Institution" value={item.institution} onChange={set('institution')} placeholder="UC Berkeley" />
+          <TextField
+            label="Institution"
+            value={item.institution}
+            onChange={set('institution')}
+            placeholder={locale === 'en' ? 'University of Bologna' : 'Università di Bologna'}
+            hint={locale === 'en' ? 'Study abroad: “Erasmus+ – Universidad de Sevilla (Spain)” as its own entry.' : 'Studio all’estero: “Erasmus+ – Universidad de Sevilla (Spagna)” come voce a sé.'}
+          />
           <Row>
             <TextField label="Degree" value={item.studyType} onChange={set('studyType')} placeholder="B.S." />
             <TextField label="Field of study" value={item.area} onChange={set('area')} placeholder="Computer Science" />
@@ -287,7 +295,7 @@ function ItemFields({ sectionKey, item, patch }: { sectionKey: string; item: Any
             <DateField label="End" value={item.endDate} onChange={set('endDate')} allowPresent />
           </Row>
           <Row>
-            <TextField label="Location" value={item.location} onChange={set('location')} placeholder="Berkeley, CA" />
+            <TextField label="Location" value={item.location} onChange={set('location')} placeholder={locale === 'en' ? 'City (Country)' : 'Città (Paese)'} />
             <TextField label="Grade / GPA" value={item.score} onChange={set('score')} placeholder="3.8 GPA" />
           </Row>
           <TagInput label="Relevant courses" value={item.courses ?? []} onChange={set('courses')} />
@@ -315,24 +323,78 @@ function ItemFields({ sectionKey, item, patch }: { sectionKey: string; item: Any
           <RatingField label="Proficiency (optional, shows a meter)" value={item.rating} onChange={(v) => patch((it) => { it.rating = v || undefined })} />
         </>
       )
-    case 'languages':
+    case 'languages': {
+      // CVPyrites: CEFR / QCER level + optional certification → one standard text line.
+      const it = locale !== 'en'
+      const cert = item.certification ?? {}
+      const setCert = (field: 'name' | 'score' | 'year', v: string) =>
+        patch((x) => {
+          const next = { name: '', score: '', year: '', ...(x.certification ?? {}), [field]: v }
+          x.certification = next.name || next.score || next.year ? next : undefined
+        })
       return (
         <>
           <Row>
-            <TextField label="Language" value={item.language} onChange={set('language')} placeholder="Spanish" />
-            <Labeled label="Fluency">
-              <select className="input" value={item.fluency || ''} onChange={(e) => set('fluency')(e.target.value)}>
+            <Labeled label="Language">
+              <input className="input" list="cvp-language-suggestions" value={item.language ?? ''} placeholder={it ? 'Inglese' : 'English'} onChange={(e) => set('language')(e.target.value)} />
+              <datalist id="cvp-language-suggestions">
+                {LANGUAGE_SUGGESTIONS[it ? 'it' : 'en'].map((l) => <option key={l} value={l} />)}
+              </datalist>
+            </Labeled>
+            <Labeled label="Level (CEFR / QCER)">
+              <select
+                className="input"
+                value={item.level ?? ''}
+                onChange={(e) => patch((x) => {
+                  if (e.target.value) { x.level = e.target.value; x.fluency = '' } else x.level = undefined
+                })}
+              >
                 <option value="">Select level…</option>
-                {FLUENCY_LEVELS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
+                {LANGUAGE_LEVELS.map((lv) => (
+                  <option key={lv} value={lv}>{levelText(lv, locale, true)}</option>
                 ))}
-                {item.fluency && !FLUENCY_LEVELS.includes(item.fluency) && <option value={item.fluency}>{item.fluency}</option>}
               </select>
             </Labeled>
           </Row>
-          <RatingField label="Level (optional)" value={item.rating} onChange={(v) => patch((it) => { it.rating = v || undefined })} />
+          {!item.level && item.fluency ? (
+            <p className="-mt-1 text-[11px] text-muted-foreground">
+              Current text: “{item.fluency}” — pick a CEFR level to replace it with the standard format.
+            </p>
+          ) : null}
+          <Labeled label="Certification (optional)" hint="Shown on the same line, e.g. “IELTS Academic 7.5 (2023)”.">
+            <input className="input" list="cvp-cert-suggestions" value={cert.name ?? ''} placeholder="IELTS Academic, Cambridge C1 Advanced, DELE…" onChange={(e) => setCert('name', e.target.value)} />
+            <datalist id="cvp-cert-suggestions">
+              {CERTIFICATION_SUGGESTIONS.map((c) => <option key={c} value={c} />)}
+            </datalist>
+          </Labeled>
+          <Row>
+            <TextField label="Score / level" value={cert.score ?? ''} onChange={(v) => setCert('score', v)} placeholder="203/210, 7.5, 105/120…" />
+            <TextField label="Year" value={cert.year ?? ''} onChange={(v) => setCert('year', v)} placeholder="2023" />
+          </Row>
+          <details open={!!item.europass}>
+            <summary className="label cursor-pointer">Europass detail (optional)</summary>
+            <div className="grid grid-cols-3 gap-2">
+              {EUROPASS_SKILLS.map((k) => (
+                <Labeled key={k} label={europassSkillLabel(k, locale)}>
+                  <select
+                    className="input"
+                    value={item.europass?.[k] ?? ''}
+                    onChange={(e) => patch((x) => {
+                      const next = { ...(x.europass ?? {}), [k]: e.target.value || undefined }
+                      x.europass = EUROPASS_SKILLS.some((s) => next[s]) ? next : undefined
+                    })}
+                  >
+                    <option value="">—</option>
+                    {CEFR_ONLY.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
+                  </select>
+                </Labeled>
+              ))}
+            </div>
+            <p className="mt-1 text-[11px] text-muted-foreground">Only if your levels differ a lot between understanding, speaking and writing.</p>
+          </details>
         </>
       )
+    }
     case 'certificates':
       return (
         <>

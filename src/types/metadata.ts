@@ -1,10 +1,10 @@
 /**
- * CVAurum metadata: everything visual & structural that is NOT resume content.
+ * CVPyrites metadata: everything visual & structural that is NOT resume content.
  * Stored under `meta.cvaurum` in an exported JSON Resume document.
  */
 import { z } from 'zod'
 
-/** Canonical section keys. Standard JSON Resume sections + CVAurum customs. */
+/** Canonical section keys. Standard JSON Resume sections + CVPyrites customs. */
 export const STANDARD_SECTIONS = [
   'profiles',
   'summary',
@@ -97,6 +97,10 @@ export const LayoutSchema = z.object({
         showLocation: z.boolean().optional(),
         showSummary: z.boolean().optional(),
         showKeywords: z.boolean().optional(),
+        /** languages: also draw dots derived from the CEFR level (text is always shown) */
+        langMeter: z.boolean().optional(),
+        /** languages: "C1 – Avanzato" (default) vs just "C1" */
+        langDescriptor: z.boolean().optional(),
       }),
     )
     .default({}),
@@ -114,8 +118,14 @@ export const LayoutSchema = z.object({
   photoSize: z.enum(['s', 'm', 'l']).default('m'),
 })
 
+/** Language the resume itself is written in (section headings, dates). Not the editor UI. */
+export const CvLocaleSchema = z.enum(['it', 'en'])
+export type CvLocale = z.infer<typeof CvLocaleSchema>
+
 export const MetadataSchema = z.object({
   template: z.string().default('modern'),
+  /** CVPyrites: resume language. Defaults to Italian (this fork targets the Italian job market). */
+  locale: CvLocaleSchema.catch('it').default('it'),
   page: PageSchema.default({}),
   theme: ThemeSchema.default({}),
   typography: TypographySchema.default({}),

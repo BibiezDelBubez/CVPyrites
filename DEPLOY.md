@@ -1,6 +1,6 @@
-# Deploying CVAurum (free, no backend)
+# Deploying CVPyrites (free, no backend)
 
-CVAurum is a fully static, client-side app — there is **no server to run**. That
+CVPyrites is a fully static, client-side app — there is **no server to run**. That
 means you can host it for **$0** on any static host. `npm run build` produces a
 `dist/` folder; serve that folder anywhere.
 

@@ -1,5 +1,5 @@
 # robots.txt — https://cvaurum.com
-# CVAurum is a 100% client-side static SPA. Only the marketing landing page ("/")
+# CVPyrites is a 100% client-side static SPA. Only the marketing landing page ("/")
 # carries indexable value; the app/editor/tracker/print routes are private,
 # data-free shells that render from the user's browser storage — keep them out.
 
