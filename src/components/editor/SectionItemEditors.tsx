@@ -210,7 +210,7 @@ function ClosingStatementEditor({ doc }: { doc: ResumeDocument }) {
         />
       </Labeled>
       <Row>
-        <TextField label="Place" value={cs.place ?? ''} onChange={set('place')} placeholder="Veroli" />
+        <TextField label="Place" value={cs.place ?? ''} onChange={set('place')} placeholder="Bologna" />
         <TextField label="Date" value={cs.date ?? ''} onChange={set('date')} placeholder="01/08/2026" />
       </Row>
       <Labeled label="Signature">

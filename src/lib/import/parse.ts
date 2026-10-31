@@ -427,7 +427,7 @@ function splitDashed(t: string): { left: string; right: string } | null {
 
 /**
  * Italian-style trailing place: "Automazioni Srl, Monaco di Baviera (Germania)",
- * "MO.S.A.I.C., Sora (FR)", "Universidad de Sevilla (Spagna)".
+ * "Rossi S.p.A., Modena (MO)", "Universidad de Sevilla (Spagna)".
  */
 function splitTrailingPlace(t: string): { rest: string; place: string } {
   const comma = t.match(/^(.+),\s*([A-ZÀ-Ý][\p{L}' .-]*\s*\([\p{L} .'-]{2,}\))$/u)
