@@ -270,6 +270,36 @@
 .rm-item {
   break-inside: avoid;
 }
+
+/* ---- page breaks (CVPyrites) ----
+   Short entries never split. A long entry (5+ bullets) may continue on the next
+   page, but only between bullets and only if: its heading, sub-line, summary and
+   first 2 bullets stay together; at least 2 bullets move on; no bullet is cut;
+   a section title is never left alone at the bottom of a page.
+   These rules are NOT print-only on purpose: the editor reads them (computed
+   styles of the hidden print render) to draw the "Page N" guides where the PDF
+   actually breaks. See lib/pagination.ts. */
+.rm-section-title,
+.rm-item-head,
+.rm-item-sub,
+.rm-item-summary {
+  break-after: avoid;
+}
+/* every entry of every section (languages, skills, certificates…) stays whole… */
+.rm-section-body > * {
+  break-inside: avoid;
+}
+.rm-bullets > li {
+  break-inside: avoid;
+}
+.rm-bullets > li:nth-child(-n + 2),
+.rm-bullets > li:last-child {
+  break-before: avoid;
+}
+/* …except a long one (5+ bullets), which may continue between its bullets. */
+.rm-section-body > .rm-item.rm-keep:has(> .rm-bullets > li:nth-child(5)) {
+  break-inside: auto;
+}
 .rm-item-head {
   display: flex;
   align-items: baseline;

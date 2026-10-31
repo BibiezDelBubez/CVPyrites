@@ -14,6 +14,7 @@ import { useResumeStore } from '@/store/useResumeStore'
 import { clamp, uid } from '@/lib/utils'
 import { BODY_SECTION_KEYS, customKey } from '@/lib/sections'
 import { fitOnePageScale } from '@/lib/fitOnePage'
+import { simulatePageBreaks, locateAnchor, type PageBreakAnchor } from '@/lib/pagination'
 import { TemplateRenderer } from '@/templates/TemplateRenderer'
 import { SectionGallery } from '@/components/editor/SectionGallery'
 
@@ -203,7 +204,30 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
   // clone in print.css), so each page holds pageH - 2·pad of content.
   const bodyPerPage = pageH - 2 * padPx
   const totalH = printH || contentH
-  const pages = fitted || totalH - padPx <= pageH ? 1 : Math.max(1, Math.ceil((totalH - 2 * padPx) / bodyPerPage))
+  const onePage = fitted || totalH - padPx <= pageH
+  // Where the PDF really breaks: simulated on the hidden print render with the
+  // same page-break rules as the print engine (keep-together, min. 2 bullets…),
+  // so the guides and page count include the gaps those rules leave.
+  const [breaks, setBreaks] = useState<PageBreakAnchor[]>([])
+  useEffect(() => {
+    if (onePage || !measureRef.current) {
+      setBreaks((b) => (b.length ? [] : b))
+      return
+    }
+    const id = requestAnimationFrame(() => {
+      if (measureRef.current) setBreaks(simulatePageBreaks(measureRef.current, pageH, padPx))
+    })
+    return () => cancelAnimationFrame(id)
+  }, [doc, printH, measureScale, onePage, pageH, padPx])
+  const pages = onePage ? 1 : breaks.length + 1
+  // …then find the same spots on the editable canvas (it has edit-only chrome,
+  // so the print render's offsets don't apply directly).
+  const [guideTops, setGuideTops] = useState<number[]>([])
+  useLayoutEffect(() => {
+    const el = innerRef.current
+    const tops = onePage || !el ? [] : breaks.map((a, i) => locateAnchor(el, a, effectiveZoom) ?? padPx + (i + 1) * bodyPerPage)
+    setGuideTops((prev) => (prev.length === tops.length && prev.every((t, i) => Math.abs(t - tops[i]) < 0.5) ? prev : tops))
+  })
   // The white sheet must be tall enough to hold the edit-only "+ Add" chrome too,
   // so it never spills onto the gray — but page breaks are drawn at PDF boundaries.
   const sheetH = Math.max(pages * pageH, contentH)
@@ -242,9 +266,9 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
             </div>
 
             {/* page-break guides */}
-            {Array.from({ length: pages - 1 }).map((_, i) => {
-              // where page i+1's content ends on the continuous canvas
-              const top = padPx + (i + 1) * bodyPerPage
+            {guideTops.map((y, i) => {
+              // just above the first line of page i+2
+              const top = Math.max(0, y - 3)
               return (
                 <div key={i} className="pointer-events-none absolute left-0 right-0" style={{ top }}>
                   <div className="border-t border-dashed border-rose-400/60" />
