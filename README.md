@@ -1,82 +1,97 @@
 <div align="center">
 
-<img src="public/icon.svg" width="88" alt="Logo CVPyrites" />
+<img src="public/icon.svg" width="88" alt="Logo di CVPyrites" />
 
 # CVPyrites
 
-**Crea il tuo CV nel browser: gratis, senza account, e i dati non lasciano mai il tuo computer.**
+Un editor di curriculum che funziona nel browser.
+È gratuito, non chiede di registrarsi e non manda i tuoi dati da nessuna parte.
 
-### [▶ Apri l'app — bibiezdelbubez.github.io/CVPyrites](https://bibiezdelbubez.github.io/CVPyrites/)
+### [Apri CVPyrites](https://bibiezdelbubez.github.io/CVPyrites/)
 
 </div>
 
-CVPyrites è un fork di [CVAurum](https://github.com/akhil-dara/cvaurum) di
-[akhil-dara](https://github.com/akhil-dara), adattato ai **CV per il mercato italiano** e a un
-uso più comodo dell'editor e dei PDF. Non serve installare niente: si apre il link e si inizia.
+CVPyrites nasce da [CVAurum](https://github.com/akhil-dara/cvaurum), un progetto open source
+di [akhil-dara](https://github.com/akhil-dara). Rispetto all'originale è pensato per chi scrive
+un CV in Italia, e corregge diverse cose dell'editor e dell'impaginazione che nell'uso di tutti
+i giorni davano fastidio.
 
-## Cosa aggiunge rispetto a CVAurum
+## Le novità rispetto a CVAurum
 
-**CV in italiano**
-- **Lingua del CV** (italiano / inglese): titoli delle sezioni e date in stile Europass (`03/2021 – oggi`).
-- **Lingue in formato QCER**: livello A1–C2 o madrelingua, certificazioni con punteggio e anno
-  (IELTS, TOEFL, DELE…), dettaglio Europass (comprensione · parlato · scrittura), pallini facoltativi.
-- **Dichiarazione privacy** (GDPR) come sezione a sé, con luogo, data e firma.
-- **Istruzione con campo Dettagli** per tesi, indirizzo di studi e borse.
-- **Import PDF** che riconosce titoli, date e sezioni dei CV italiani.
-- Suggerimenti per **esperienze e studi all'estero** (Paese, Erasmus).
-- L'**analisi ATS** conta anche livelli linguistici, certificazioni e dettagli dell'istruzione.
+### Per i CV italiani
 
-**Editor più comodo**
-- **Riepilogo del ruolo** solo dove serve, con il pulsante `+ riepilogo`.
-- **Corsi, keyword e competenze** si riordinano trascinandoli e si modificano con un clic.
-- Le **sezioni eliminate** spariscono davvero dal CV, e restano recuperabili con Annulla.
+- Il CV può essere in italiano o in inglese. Cambiano i titoli delle sezioni e le date, scritte
+  come nell'Europass (`03/2021 – oggi`).
+- Le lingue si indicano con i livelli del Quadro comune europeo, da A1 a C2, oppure come
+  madrelingua. Si possono aggiungere le certificazioni con punteggio e anno (IELTS, TOEFL,
+  DELE…) e il dettaglio di comprensione, parlato e scrittura.
+- C'è una sezione apposta per l'autorizzazione al trattamento dei dati personali, con luogo,
+  data e firma.
+- Nella formazione c'è un campo per la tesi, l'indirizzo di studi e le borse di studio.
+- L'importazione da PDF riconosce titoli, date e sezioni dei CV scritti in italiano.
+- Chi ha lavorato o studiato all'estero trova indicazioni su come scriverlo (il Paese,
+  l'Erasmus).
+- Il controllo ATS considera anche i livelli delle lingue, le certificazioni e i dettagli
+  della formazione.
 
-**PDF e Word**
-- **Margini su ogni pagina**, non solo all'inizio e alla fine del documento.
-- **Impaginazione senza buchi**: un'esperienza lunga continua alla pagina dopo tra un punto
-  e l'altro, le voci brevi restano intere, e le linee "Page 2", "Page 3" dell'editor
-  coincidono con il PDF.
-- **Numeri di pagina** facoltativi (`Nome · 2/3`), solo sui CV di più pagine.
-- L'export **Word** include anche dettagli e corsi dell'istruzione.
+### Nell'editor
 
-**Pubblicazione**
-- Sito su **GitHub Pages**, aggiornato automaticamente a ogni push.
-- Logo e anteprima dei link propri.
+- Il breve riassunto sotto ogni esperienza compare solo se lo aggiungi, con `+ riepilogo`.
+- Corsi, parole chiave e competenze si spostano trascinandoli e si correggono con un clic,
+  senza doverli cancellare e riscrivere.
+- Una sezione eliminata non ricompare più in fondo al CV. Se l'hai tolta per sbaglio, c'è
+  Annulla.
 
-## Cosa c'era già in CVAurum
+### Nel PDF e nel Word
 
-- **38 template**, molti pensati per i software ATS, con font, colori e spaziature regolabili.
-- **Modifica direttamente sulla pagina**, con anteprima A4 / Letter, annulla/ripeti e salvataggio automatico.
-- **Analisi ATS** istantanea e confronto con il testo di un annuncio (parole chiave trovate e mancanti).
-- **Import di un CV in PDF**, anche scansionato (OCR nel browser).
-- **Export** in PDF (testo selezionabile), Word e JSON ([JSON Resume](https://jsonresume.org)).
-- **App installabile** che funziona anche offline, e un **tracker delle candidature**.
+- Ogni pagina ha i suoi margini, anche quando il CV occupa più pagine.
+- Le pagine non restano mezze vuote. Un'esperienza lunga può continuare nella pagina dopo,
+  ma solo tra un punto e l'altro; quelle brevi restano intere. Le linee di fine pagina che
+  vedi nell'editor sono le stesse del PDF.
+- Volendo, in fondo a ogni pagina compaiono il tuo nome e il numero di pagina
+  (`Mario Rossi · 2/3`).
+- Nel Word ci sono anche i corsi e i dettagli della formazione, che prima mancavano.
 
-## Privacy
+### Online
 
-Non c'è un server: i CV sono salvati nel browser di chi usa l'app (IndexedDB) e non vengono
-inviati a nessuno. Niente account, cookie o statistiche. Per spostare un CV su un altro
-computer o browser lo esporti in JSON e lo reimporti.
+- L'app è pubblicata su GitHub Pages e si aggiorna da sola a ogni modifica del codice.
 
-## Avviarla sul tuo computer
+## Cosa viene da CVAurum
 
-Serve [Node.js](https://nodejs.org) 18.18 o più recente.
+Tutto il resto è del progetto originale: 38 modelli tra cui scegliere, molti adatti ai
+software ATS; la modifica direttamente sulla pagina; il controllo ATS, con il confronto tra
+il CV e un annuncio di lavoro; l'importazione di un CV esistente in PDF, anche scansionato;
+l'esportazione in PDF, Word e JSON; una bacheca per seguire le candidature; la possibilità
+di installarla come app e usarla offline.
+
+## I tuoi dati
+
+CVPyrites non ha un server. I CV restano nel browser che usi e non vengono inviati a nessuno:
+niente registrazione, niente cookie, niente statistiche. Per spostare un CV su un altro
+computer, esportalo in JSON e importalo dall'altra parte.
+
+## Usarla sul proprio computer
+
+Serve [Node.js](https://nodejs.org) 18.18 o successivo. Dalla cartella del progetto:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Poi apri http://localhost:5173. Guida passo passo per Windows: [COME_AVVIARE.md](COME_AVVIARE.md).
+Poi apri http://localhost:5173. Se è la prima volta, [COME_AVVIARE.md](COME_AVVIARE.md)
+spiega tutto passo per passo.
 
-## Pubblicarla
+## Pubblicarla online
 
-Il workflow [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) pubblica
-il sito su GitHub Pages a ogni push su `main`. Su un tuo fork basta attivarlo una volta:
-**Settings → Pages → Source: GitHub Actions**. Altre opzioni (Cloudflare, Netlify, Vercel)
-in [DEPLOY.md](DEPLOY.md).
+A ogni push sul ramo `main`, GitHub costruisce e pubblica il sito da solo: se ne occupa il
+file [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml). Se fai un
+fork, basta attivare GitHub Pages una volta, da **Settings → Pages → Source → GitHub
+Actions**. In [DEPLOY.md](DEPLOY.md) trovi anche come pubblicarla su Cloudflare, Netlify o
+Vercel.
 
 ## Crediti e licenza
 
-Il motore, il design e i template vengono da [CVAurum](https://github.com/akhil-dara/cvaurum)
-di [akhil-dara](https://github.com/akhil-dara). Licenza **MIT**, come l'originale: vedi [LICENSE](LICENSE).
+Motore, grafica e modelli sono di [CVAurum](https://github.com/akhil-dara/cvaurum), di
+[akhil-dara](https://github.com/akhil-dara). CVPyrites è distribuito con la stessa licenza MIT
+dell'originale: vedi [LICENSE](LICENSE).
