@@ -4,17 +4,18 @@
 
 # CVPyrites
 
-Un editor di curriculum che funziona nel browser.
-È gratuito, non chiede di registrarsi e non manda i tuoi dati da nessuna parte.
+Editor di curriculum che funziona direttamente nel browser.
+È gratuito, non chiede di registrarsi e non manda i tuoi dati a nessuno.
 
 ### [Apri CVPyrites](https://bibiezdelbubez.github.io/CVPyrites/)
 
 </div>
 
 CVPyrites nasce da [CVAurum](https://github.com/akhil-dara/cvaurum), un progetto open source
-di [akhil-dara](https://github.com/akhil-dara). Rispetto all'originale è pensato per chi scrive
-un CV in Italia, e corregge diverse cose dell'editor e dell'impaginazione che nell'uso di tutti
-i giorni davano fastidio.
+di [akhil-dara](https://github.com/akhil-dara), e ne mantiene tutte le funzioni. In più è
+pensato per chi scrive un CV in Italia (formato Europass, livelli delle lingue secondo il
+Quadro comune europeo, dichiarazione sulla privacy) e aggiunge alcune opzioni all'editor e
+all'impaginazione del PDF.
 
 ## Le novità rispetto a CVAurum
 
@@ -50,7 +51,7 @@ i giorni davano fastidio.
   vedi nell'editor sono le stesse del PDF.
 - Volendo, in fondo a ogni pagina compaiono il tuo nome e il numero di pagina
   (`Mario Rossi · 2/3`).
-- Nel Word ci sono anche i corsi e i dettagli della formazione, che prima mancavano.
+- Nel Word ci sono anche i corsi e i dettagli della formazione.
 
 ### Online
 
