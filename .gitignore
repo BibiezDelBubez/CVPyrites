@@ -23,3 +23,11 @@ pnpm-debug.log*
 /*.pdf
 /*.docx
 /*_Resume_*.json
+# Any resume JSON saved in the repo root (e.g. "Versione5.json"); the project's own
+# config files stay tracked.
+/*.json
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/tsconfig.node.json
+!/.prettierrc.json
