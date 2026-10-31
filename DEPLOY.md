@@ -29,9 +29,12 @@ These don't read `wrangler.jsonc`, so add a `public/_redirects` containing
   it honors `public/_headers` and `public/_redirects` natively.
 - **Netlify** — drag-and-drop `dist/` or connect Git. Free tier.
 - **Vercel** — import the repo; framework preset **Vite**. Free tier.
-- **GitHub Pages** — served from a subpath (`/<repo>/`). Set `base: '/<repo>/'`
-  in `vite.config.ts`, build, publish `dist/`, and add a `404.html` copy of
-  `index.html` for SPA routing.
+- **GitHub Pages** — ready to go: [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)
+  builds and publishes on every push to `main`. One-time setup: repo
+  **Settings → Pages → Source: GitHub Actions**. The site is served from
+  `https://<user>.github.io/<repo>/`: the workflow sets `BASE_PATH` (Vite `base`
+  + router basename), copies `index.html` to `404.html` for deep links, and
+  puts the CSP in a `<meta>` tag (`CSP_META`), since Pages can't send headers.
 
 ## Notes
 

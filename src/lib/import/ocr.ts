@@ -23,7 +23,7 @@ import type { Item } from './layoutGraph'
 // precache; fetched on demand, same-origin). Must be ABSOLUTE (origin-qualified):
 // Tesseract loads the worker as a blob and `importScripts()` the core from inside
 // it, where a root-relative "/ocr/…" path fails to resolve.
-const OCR_BASE = `${typeof self !== 'undefined' && self.location ? self.location.origin : ''}/ocr`
+const OCR_BASE = `${typeof self !== 'undefined' && self.location ? self.location.origin : ''}${import.meta.env.BASE_URL}ocr`
 
 export interface OcrProgress {
   page: number

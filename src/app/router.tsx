@@ -126,4 +126,7 @@ export const router = createBrowserRouter([
   },
   // Standalone, chrome-free page used for native "Save as PDF".
   { path: '/print/:id', element: s(<PrintPage />), errorElement: <RouteError /> },
-])
+], {
+  // CVPyrites: "/" locally, "/CVPyrites" on GitHub Pages (vite `base`).
+  basename: import.meta.env.BASE_URL.replace(/\/+$/, '') || '/',
+})

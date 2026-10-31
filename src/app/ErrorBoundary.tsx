@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
             <button className="btn-outline" onClick={() => this.setState({ error: null })}>
               Try again
             </button>
-            <a className="btn-primary" href="/app">
+            <a className="btn-primary" href={`${import.meta.env.BASE_URL}app`}>
               Back to resumes
             </a>
           </div>

@@ -10,8 +10,9 @@ import type { ResumeDocument } from '@/types/document'
  * there's no stray tab to get stranded on.
  */
 export function openPrintWindow(id: string) {
-  const w = window.open(`/print/${id}`, '_blank')
-  if (!w) window.location.assign(`/print/${id}`)
+  const url = `${import.meta.env.BASE_URL}print/${id}`
+  const w = window.open(url, '_blank')
+  if (!w) window.location.assign(url)
 }
 
 export function pdfBaseName(doc: ResumeDocument): string {

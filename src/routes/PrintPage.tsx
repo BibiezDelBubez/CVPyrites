@@ -145,7 +145,7 @@ export function PrintPage() {
   const goBack = () => {
     if (window.opener) window.close()
     else if (window.history.length > 1) window.history.back()
-    else window.location.assign(id ? `/resume/${id}` : '/app')
+    else window.location.assign(`${import.meta.env.BASE_URL}${id ? `resume/${id}` : 'app'}`)
   }
 
   return (
