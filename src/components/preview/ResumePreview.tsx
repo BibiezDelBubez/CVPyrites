@@ -199,7 +199,11 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
   // "Page 2" guide while the exported PDF stays one page.
   const padPx = doc.metadata.page.margin * MM_TO_PX
   const fitted = autoFit && fitScale < 0.999
-  const pages = fitted ? 1 : Math.max(1, Math.ceil(((printH || contentH) - padPx) / pageH))
+  // Every printed page keeps the margin at top and bottom (box-decoration-break:
+  // clone in print.css), so each page holds pageH - 2·pad of content.
+  const bodyPerPage = pageH - 2 * padPx
+  const totalH = printH || contentH
+  const pages = fitted || totalH - padPx <= pageH ? 1 : Math.max(1, Math.ceil((totalH - 2 * padPx) / bodyPerPage))
   // The white sheet must be tall enough to hold the edit-only "+ Add" chrome too,
   // so it never spills onto the gray — but page breaks are drawn at PDF boundaries.
   const sheetH = Math.max(pages * pageH, contentH)
@@ -239,7 +243,8 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
 
             {/* page-break guides */}
             {Array.from({ length: pages - 1 }).map((_, i) => {
-              const top = (i + 1) * pageH
+              // where page i+1's content ends on the continuous canvas
+              const top = padPx + (i + 1) * bodyPerPage
               return (
                 <div key={i} className="pointer-events-none absolute left-0 right-0" style={{ top }}>
                   <div className="border-t border-dashed border-rose-400/60" />

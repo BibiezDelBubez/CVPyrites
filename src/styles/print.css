@@ -36,6 +36,16 @@
     page-break-after: auto;
   }
 
+  /* CVPyrites: the page margin is the columns' padding (@page margin is 0 so a
+     full-bleed header/sidebar can reach the paper edge). Without this, a long CV
+     is cut across sheets with NO margin: page 1 runs to the bottom edge and page 2
+     starts at the very top. `clone` repeats the padding on every printed page. */
+  .rm-col-main,
+  .rm-col-aside {
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
   /* Make backgrounds & colors actually print. */
   * {
     -webkit-print-color-adjust: exact !important;
