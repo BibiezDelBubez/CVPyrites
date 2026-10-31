@@ -204,6 +204,25 @@ export function sectionHasContent(key: string, content: ResumeContent): boolean 
 }
 
 /**
+ * CVPyrites: content-bearing sections that aren't placed in either column.
+ * `resolveOrder` appends them to the main column so data is never dropped, so the
+ * editor's section list must show them too, or they render with no way to manage them.
+ * (Hidden ones are included: hiding keeps a section listed in the editor.)
+ */
+export function orphanSections(doc: ResumeDocument): string[] {
+  const { layout } = doc.metadata
+  const placed = new Set([...layout.main, ...(layout.aside ?? [])])
+  return allSectionKeys(doc.content).filter((k) => !placed.has(k) && sectionHasContent(k, doc.content))
+}
+
+/** CVPyrites: empty a standard section's content (used when the section is removed). */
+export function clearSectionContent(content: ResumeContent, key: string): void {
+  if (key === 'summary') content.basics.summary = ''
+  else if (key === 'closingStatement') content.closingStatement = { statement: '', place: '', date: '', signature: '' }
+  else if (Array.isArray((content as unknown as Record<string, unknown>)[key])) (content as unknown as Record<string, unknown[]>)[key] = []
+}
+
+/**
  * Compute the final ordered section keys for each column, honoring hidden flags
  * and content presence, and folding aside → main for single-column layouts.
  * Any content-bearing section missing from the configured order is appended so

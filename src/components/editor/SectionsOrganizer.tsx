@@ -14,7 +14,7 @@ import {
 import type { ResumeDocument } from '@/types/document'
 import { useResumeStore } from '@/store/useResumeStore'
 import { uid, cn } from '@/lib/utils'
-import { BODY_SECTION_KEYS, customKey, defaultLabel, sectionLabel } from '@/lib/sections'
+import { BODY_SECTION_KEYS, customKey, defaultLabel, sectionLabel, orphanSections, clearSectionContent } from '@/lib/sections'
 import { sectionIconFor } from '@/components/icons/sectionIcons'
 import { SectionBoard } from './SectionBoard'
 import { SectionItemsEditor } from './SectionItemEditors'
@@ -40,6 +40,9 @@ export function SectionsOrganizer({ doc }: { doc: ResumeDocument }) {
 
   const layout = doc.metadata.layout
   const twoCol = layout.columns === 2
+  // Sections with content but missing from the layout still print (appended to the
+  // main column), so list them too: the panel must match what the CV shows.
+  const mainKeys = [...layout.main, ...orphanSections(doc)]
 
   const setColumns = (main: string[], aside: string[]) =>
     updateMetadata((m) => {
@@ -68,7 +71,13 @@ export function SectionsOrganizer({ doc }: { doc: ResumeDocument }) {
         strip(d.metadata.layout, key)
       })
     } else {
-      updateMetadata((m) => strip(m.layout, key))
+      // CVPyrites: also empty the section. Taking it out of the layout alone made it
+      // reappear at the end of the CV, since sections with content are never dropped.
+      // One history step, so Undo brings back both the section and its items.
+      updateDoc((d) => {
+        clearSectionContent(d.content, key)
+        strip(d.metadata.layout, key)
+      })
     }
   }
   const renameSection = (key: string, label: string) => {
@@ -119,12 +128,12 @@ export function SectionsOrganizer({ doc }: { doc: ResumeDocument }) {
     />
   )
 
-  const available = BODY_SECTION_KEYS.filter((k) => !layout.main.includes(k) && !layout.aside.includes(k))
+  const available = BODY_SECTION_KEYS.filter((k) => !mainKeys.includes(k) && !layout.aside.includes(k))
 
   return (
     <div className="space-y-4">
       <SectionBoard
-        main={layout.main}
+        main={mainKeys}
         aside={layout.aside}
         twoCol={twoCol}
         onChange={setColumns}
