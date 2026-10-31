@@ -39,7 +39,7 @@ export default defineConfig({
         short_name: 'CVPyrites',
         description: 'Free, open-source, 100% local resume builder. 38 ATS-ready templates, a built-in ATS score, PDF résumé import, and PDF / Word / JSON export — no account, fully offline.',
         categories: ['productivity', 'business', 'utilities'],
-        theme_color: '#17130c',
+        theme_color: '#d4982f',
         background_color: '#0b0f1a',
         display: 'standalone',
         start_url: base,
