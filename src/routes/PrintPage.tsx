@@ -106,6 +106,8 @@ export function PrintPage() {
           if (sheetRef.current.scrollHeight <= pageHpx + padPx) {
             sheetRef.current.style.height = `${Math.floor(pageHpx) - 2}px`
             sheetRef.current.style.overflow = 'hidden'
+          } else if (doc.metadata.page.pageNumbers) {
+            style.textContent += pageNumberCss(doc)
           }
         }
       } catch {
@@ -167,4 +169,35 @@ export function PrintPage() {
       </div>
     </>
   )
+}
+
+/**
+ * CVPyrites: "Name · 2/3" at the foot of every printed page (multi-page only).
+ * Drawn in an @page margin box (Chrome 131+), the only place that knows the page
+ * number. The footer strip is carved out of the bottom margin — the columns'
+ * bottom padding shrinks by the same amount — so the text area per page, and
+ * therefore every page break, stays exactly the same.
+ */
+function pageNumberCss(doc: ResumeDocument): string {
+  const marginMm = doc.metadata.page.margin
+  const footMm = Math.min(9, marginMm)
+  const q = (s: string) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`
+  const name = doc.content.basics.name.trim()
+  const label = name ? `${q(name + ' · ')} counter(page) "/" counter(pages)` : `counter(page) "/" counter(pages)`
+  const { fontFamily } = doc.metadata.typography
+  return `
+@page {
+  margin-bottom: ${footMm}mm;
+  @bottom-right {
+    content: ${label};
+    font-family: ${q(fontFamily)}, system-ui, sans-serif;
+    font-size: 7.5pt;
+    color: ${doc.metadata.theme.muted || '#5b6472'};
+    padding-right: ${marginMm}mm;
+    vertical-align: middle;
+  }
+}
+@media print {
+  .rm-col-main, .rm-col-aside { padding-bottom: ${Math.max(0, marginMm - footMm)}mm !important; }
+}`
 }

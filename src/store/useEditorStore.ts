@@ -19,6 +19,8 @@ interface EditorState {
   /** the live auto-fit-to-one-page scale the preview/PDF settled on (1 = none).
    *  Mirrored here so silent exports (Word) can shrink to the same page count. */
   onePageScale: number
+  /** CVPyrites: printed page count the editor predicts (drives Word's page-number footer) */
+  pageCount: number
 
   setLeftTab: (t: LeftTab) => void
   setActiveSection: (s: string | null) => void
@@ -32,6 +34,7 @@ interface EditorState {
   setHighlightKeywords: (v: boolean) => void
   setFocusItem: (id: string | null) => void
   setOnePageScale: (v: number) => void
+  setPageCount: (v: number) => void
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -43,6 +46,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   highlightKeywords: false,
   focusItem: null,
   onePageScale: 1,
+  pageCount: 1,
 
   setLeftTab: (leftTab) => set({ leftTab }),
   setActiveSection: (activeSection) => set({ activeSection }),
@@ -56,4 +60,5 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setHighlightKeywords: (highlightKeywords) => set({ highlightKeywords }),
   setFocusItem: (focusItem) => set({ focusItem }),
   setOnePageScale: (onePageScale) => set({ onePageScale }),
+  setPageCount: (pageCount) => set({ pageCount }),
 }))

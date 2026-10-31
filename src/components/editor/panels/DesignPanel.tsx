@@ -215,6 +215,12 @@ export function DesignPanel({ doc }: { doc: ResumeDocument }) {
         <Slider label="Margins" value={m.page.margin} min={6} max={30} step={1} unit="mm" onChange={(v) => update((md) => { md.page.margin = v })} />
         <Toggle label="Fit to one page" checked={m.page.autoFit} onChange={(v) => update((md) => { md.page.autoFit = v })} />
         <p className="-mt-1 text-[11px] text-muted-foreground">Auto-shrinks type &amp; spacing so a near-full resume fits one page.</p>
+        <Toggle label={m.locale === 'en' ? 'Page numbers' : 'Numeri di pagina'} checked={m.page.pageNumbers} onChange={(v) => update((md) => { md.page.pageNumbers = v })} />
+        <p className="-mt-1 text-[11px] text-muted-foreground">
+          {m.locale === 'en'
+            ? 'Your name and page (e.g. 2/3) at the foot of every page — only when the resume runs over one page. PDF and Word.'
+            : 'Nome e pagina (es. 2/3) in fondo a ogni pagina, solo se il CV supera una pagina. Vale per PDF e Word.'}
+        </p>
       </FieldGroup>
     </div>
   )

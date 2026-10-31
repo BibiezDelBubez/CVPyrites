@@ -39,7 +39,7 @@ export function ExportDialog({ fmt, doc, onClose }: { fmt: ExportFormat; doc: Re
         const { exportDocumentDocx } = await import('@/lib/docx')
         // Match the .docx to the same one-page fit the preview/PDF settled on.
         const scale = d.metadata.page.autoFit ? useEditorStore.getState().onePageScale : 1
-        await exportDocumentDocx(d, fileName, scale)
+        await exportDocumentDocx(d, fileName, scale, useEditorStore.getState().pageCount > 1)
       }
       toast(`Downloaded ${fileName}`, 'success')
       onClose()

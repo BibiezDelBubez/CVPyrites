@@ -33,6 +33,8 @@ export const PageSchema = z.object({
   margin: z.number().min(0).max(40).default(13),
   /** auto-shrink type/spacing to fit a single page when it's close */
   autoFit: z.boolean().default(true),
+  /** CVPyrites: "Name · 2/3" footer on every page (PDF + Word), only when multi-page */
+  pageNumbers: z.boolean().default(false),
 })
 
 export const ThemeSchema = z.object({

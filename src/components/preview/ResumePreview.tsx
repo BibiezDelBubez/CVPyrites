@@ -220,6 +220,8 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
     return () => cancelAnimationFrame(id)
   }, [doc, printH, measureScale, onePage, pageH, padPx])
   const pages = onePage ? 1 : breaks.length + 1
+  const setPageCount = useEditorStore((s) => s.setPageCount)
+  useEffect(() => setPageCount(pages), [pages, setPageCount])
   // …then find the same spots on the editable canvas (it has edit-only chrome,
   // so the print render's offsets don't apply directly).
   const [guideTops, setGuideTops] = useState<number[]>([])

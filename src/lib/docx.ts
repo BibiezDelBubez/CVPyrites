@@ -15,7 +15,9 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  Footer,
   ImageRun,
+  PageNumber,
   Packer,
   Paragraph,
   ShadingType,
@@ -350,7 +352,7 @@ function buildHeader(doc: ResumeDocument, C: Ctx): Paragraph[] {
 
 /* --------------------------------------------------------- the export itself */
 
-export async function exportDocumentDocx(doc: ResumeDocument, filename?: string, fitScale = 1) {
+export async function exportDocumentDocx(doc: ResumeDocument, filename?: string, fitScale = 1, multiPage = false) {
   const { metadata } = doc
   // Apply the live one-page fit so the Word doc lands on the same page count as
   // the PDF. Clamp to the same floor the on-screen fit uses (never unreadable).
@@ -450,6 +452,8 @@ export async function exportDocumentDocx(doc: ResumeDocument, filename?: string,
               : { top: TWIP.margin, right: TWIP.margin, bottom: TWIP.margin, left: TWIP.margin },
           },
         },
+        // CVPyrites: "Name · 2/3" footer, same rule as the PDF (option on + multi-page).
+        footers: metadata.page.pageNumbers && multiPage ? { default: pageNumberFooter(doc, twoCol ? TWIP.margin : 0) } : undefined,
         children: body,
       },
     ],
@@ -457,4 +461,22 @@ export async function exportDocumentDocx(doc: ResumeDocument, filename?: string,
 
   const blob = await Packer.toBlob(document)
   downloadBlob(blob, filename || resumeFilename(doc.content.basics.name, doc.title, 'docx'))
+}
+
+/** CVPyrites: discreet right-aligned "Name · 2/3" page footer. */
+function pageNumberFooter(doc: ResumeDocument, indentRight: number): Footer {
+  const name = doc.content.basics.name.trim()
+  const run = { size: 15, color: (doc.metadata.theme.muted || '#5b6472').replace('#', '') }
+  return new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        // zero-margin (two-column) pages: keep it in line with the text
+        indent: { right: indentRight },
+        children: [
+          new TextRun({ ...run, children: [`${name ? name + ' · ' : ''}`, PageNumber.CURRENT, '/', PageNumber.TOTAL_PAGES] }),
+        ],
+      }),
+    ],
+  })
 }
