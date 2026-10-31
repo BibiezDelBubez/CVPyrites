@@ -70,7 +70,7 @@ export function extractResumeText(doc: ResumeDocument): string {
   parts.push(b.name, b.label, htmlToText(b.summary))
   c.work.forEach((w) => parts.push(w.position, w.name, htmlToText(w.summary), ...w.highlights.map(htmlToText)))
   c.projects.forEach((p) => parts.push(p.name, p.description, ...p.highlights.map(htmlToText), ...(p.keywords ?? [])))
-  c.education.forEach((e) => parts.push(e.area, e.studyType, e.institution, ...(e.courses ?? [])))
+  c.education.forEach((e) => parts.push(e.area, e.studyType, e.institution, htmlToText(e.summary), ...(e.courses ?? [])))
   c.skills.forEach((s) => parts.push(s.name, ...(s.keywords ?? [])))
   c.volunteer.forEach((v) => parts.push(v.position, v.organization, htmlToText(v.summary), ...v.highlights.map(htmlToText)))
   c.awards.forEach((a) => parts.push(a.title, htmlToText(a.summary)))

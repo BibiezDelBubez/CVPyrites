@@ -219,6 +219,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
         const line = [[e.studyType, e.area].filter(Boolean).join(', '), e.score].filter(Boolean).join('  ·  ')
         if (line) out.push(sub(line, C))
         if (has(e.summary)) out.push(...summaryParas(e.summary!, C))
+        if (e.courses?.length) out.push(new Paragraph({ spacing: { after: 30 }, children: [new TextRun({ text: e.courses.join('  ·  '), color: C.muted, size: SIZE.sub })] }))
       }
     } else if (key === 'projects') {
       out.push(heading(label, C))

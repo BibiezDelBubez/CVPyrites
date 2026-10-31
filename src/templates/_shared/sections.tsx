@@ -353,10 +353,29 @@ function Work({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opts?: 
 }
 
 function Education({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; opts?: SecOpts }) {
+  // CVPyrites: "details" (thesis, track, scholarships…) work like the role summary in
+  // Work: hidden when empty, opened with "+ dettagli", kept open while being edited.
+  const [openDetails, setOpenDetails] = useState<string | null>(null)
+  const focusDetails = useRef<string | null>(null)
+  const it = doc.metadata.locale !== 'en'
   return (
     <>
       {doc.content.education.map((e, i) => {
         const title = [e.studyType, e.area].filter(Boolean).join(', ') || e.institution
+        const did = e.id ?? String(i)
+        const detailsVisible = has(e.summary) || (!!edit && openDetails === did)
+        const addDetailsBtn =
+          edit && !detailsVisible ? (
+            <button
+              type="button"
+              className="rm-add-btn rm-add-btn-secondary"
+              onMouseDown={(ev) => ev.preventDefault()}
+              onClick={() => { focusDetails.current = did; setOpenDetails(did) }}
+              title={it ? 'Aggiungi tesi, indirizzo, borse di studio…' : 'Add thesis, track, scholarships…'}
+            >
+              {it ? '+ dettagli' : '+ details'}
+            </button>
+          ) : null
         return (
           <article className="rm-item rm-keep" key={e.id}>
             <ItemHead
@@ -368,8 +387,23 @@ function Education({ doc, edit, opts }: { doc: ResumeDocument; edit?: EditFn; op
               {show(opts?.showLocation) && (edit || e.location) ? <Ed edit={edit} value={e.location} apply={(c, v) => { c.education[i].location = v }} className="rm-item-loc" placeholder={doc.metadata.locale === 'en' ? 'City (Country)' : 'Città (Paese)'} /> : null}
               {edit || e.score ? <Ed edit={edit} value={e.score} apply={(c, v) => { c.education[i].score = v }} placeholder="GPA" /> : null}
             </div>
-            {has(e.summary) ? <RichText html={e.summary} /> : null}
+            {detailsVisible ? (
+              <div
+                className="rm-item-summary"
+                ref={(el) => {
+                  if (el && focusDetails.current === did) {
+                    focusDetails.current = null
+                    el.querySelector<HTMLElement>('.rm-editable')?.focus()
+                  }
+                }}
+                onFocus={edit ? () => setOpenDetails(did) : undefined}
+                onBlur={edit ? () => setOpenDetails((cur) => (cur === did ? null : cur)) : undefined}
+              >
+                <Ed edit={edit} value={e.summary} rich multiline as="div" apply={(c, v) => { c.education[i].summary = v }} placeholder={it ? 'Tesi: …' : 'Thesis: …'} />
+              </div>
+            ) : null}
             {e.courses?.length ? <div className="rm-skill-inline">{e.courses.join(' · ')}</div> : null}
+            {addDetailsBtn ? <div className="rm-add-entry-row no-print" contentEditable={false}>{addDetailsBtn}</div> : null}
           </article>
         )
       })}

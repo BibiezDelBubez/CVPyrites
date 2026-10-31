@@ -298,6 +298,18 @@ function ItemFields({ sectionKey, item, patch, locale }: { sectionKey: string; i
             <TextField label="Location" value={item.location} onChange={set('location')} placeholder={locale === 'en' ? 'City (Country)' : 'Città (Paese)'} />
             <TextField label="Grade / GPA" value={item.score} onChange={set('score')} placeholder="3.8 GPA" />
           </Row>
+          {/* CVPyrites: thesis, track, scholarships… shown under the degree, above the courses. */}
+          <Labeled
+            label={locale === 'en' ? 'Details' : 'Dettagli'}
+            hint={locale === 'en' ? 'Thesis, track, scholarships… one per line. Bold the label: “Thesis: …”.' : 'Tesi, indirizzo, borse… una per riga. Metti l’etichetta in grassetto: “Tesi: …”.'}
+          >
+            <RichTextEditor
+              value={item.summary ?? ''}
+              onChange={set('summary')}
+              minHeight={48}
+              placeholder={locale === 'en' ? 'Thesis: …' : 'Tesi: …'}
+            />
+          </Labeled>
           <TagInput label="Relevant courses" value={item.courses ?? []} onChange={set('courses')} />
         </>
       )
