@@ -209,7 +209,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
       out.push(heading(label, C))
       for (const w of content.work) {
         out.push(titleDate(w.position || w.name || 'Role', formatDateRange(w.startDate, w.endDate, dOpts), C, width))
-        const s = [w.name && w.position ? w.name : '', w.location].filter(Boolean).join('  ·  ')
+        const s = [w.name && w.position ? w.name : '', w.location].filter(Boolean).join(', ')
         if (s) out.push(sub(s, C))
         if (has(w.summary)) out.push(...summaryParas(w.summary!, C))
         out.push(...bulletsOf(w.highlights ?? [], C))
@@ -318,7 +318,7 @@ function buildSections(keys: string[], doc: ResumeDocument, C: Ctx, width: numbe
       out.push(heading(label, C))
       for (const it of section.items) {
         out.push(titleDate(it.name || '', formatDate(it.date, dOpts), C, width))
-        const s = [it.subtitle, it.location].filter(Boolean).join('  ·  ')
+        const s = [it.subtitle, it.location].filter(Boolean).join(', ')
         if (s) out.push(sub(s, C))
         if (has(it.summary)) out.push(...summaryParas(it.summary, C))
         out.push(...bulletsOf(it.highlights ?? [], C))

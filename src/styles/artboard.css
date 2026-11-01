@@ -315,6 +315,16 @@
   font-weight: 600;
   color: var(--rm-text);
 }
+/* CVPyrites: a real comma between company and location ("Acme S.r.l., Roma"),
+   so ATS read them as two fields instead of one long company name. Not where the
+   location sits far right (Vector, Cambridge): the gap already separates them. */
+.rm-item-org:has(+ .rm-item-loc:not(:empty))::after {
+  content: ',';
+}
+.tpl-vector .rm-item-org::after,
+.tpl-cambridge .rm-item-org::after {
+  content: none;
+}
 .rm-item-sub {
   display: flex;
   flex-wrap: wrap;
