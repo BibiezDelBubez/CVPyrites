@@ -53,6 +53,18 @@
   }
 }
 
+/* CVPyrites: keep the PDF's internal text order = reading order.
+   Chrome writes non-positioned text first and positioned elements (position:
+   relative/absolute) afterwards, so a positioned section title or bullet ended up
+   AFTER the rest of its section in the file. ATS that read the file in order
+   (Apache Tika and the like) then detached bullets from their job title.
+   Making every block-level element positioned restores document order. Zero
+   specificity: rules that position something on purpose (icons…) still win, and
+   inline elements (bold labels inside a sentence) are left alone. No visual change. */
+:where(.mode-print :is(.rm-col-main, .rm-col-aside) *:not(span, strong, b, em, i, a, u, s, small, sub, sup, code, br, svg, svg *)) {
+  position: relative;
+}
+
 /* Atomic blocks that should never be split across a page boundary. */
 .rm-keep {
   break-inside: avoid;
