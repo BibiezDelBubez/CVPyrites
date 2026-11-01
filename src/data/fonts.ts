@@ -95,7 +95,11 @@ export function fontStack(name?: string): string {
   if (!name) return FALLBACKS.sans
   const def = FONT_MAP[name]
   const fb = def ? def.fallback ?? FALLBACKS[def.category] : FALLBACKS.sans
-  return `"${name}", ${fb}`
+  // CVPyrites: "<name> Print" = static instances loaded only by the print page
+  // (src/styles/fonts-print.css), so the PDF embeds TrueType instead of Type 3.
+  // Elsewhere that family doesn't exist and the browser simply skips it; if a
+  // static file is missing, "<name>" (same metrics) takes over.
+  return `"${name} Print", "${name}", ${fb}`
 }
 
 /**

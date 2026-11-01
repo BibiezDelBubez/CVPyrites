@@ -59,7 +59,16 @@ export default defineConfig({
         // OCR engine assets (tesseract worker/core/traineddata, ~10MB) are only
         // needed when a user imports a scanned PDF — keep them OUT of the precache
         // so first load stays lean; they fetch on demand, same-origin, from /ocr/.
-        globIgnores: ['**/ocr/**'],
+        // Static print fonts (public/fonts/print, ~5MB) are fetched only when a PDF
+        // is printed, then cached; offline the variable fonts (same metrics) take over.
+        globIgnores: ['**/ocr/**', '**/fonts/print/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/fonts/print/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'print-fonts', expiration: { maxEntries: 300 } },
+          },
+        ],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: `${base}index.html`,
         // The print route renders client-side; never serve the SPA shell for it from cache wrongly.

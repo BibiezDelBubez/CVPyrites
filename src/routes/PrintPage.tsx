@@ -11,6 +11,8 @@ import type { ResumeDocument } from '@/types/document'
 import { PAGE_DIMENSIONS, MM_TO_PX } from '@/types/metadata'
 import { loadDoc } from '@/lib/storage'
 import { ensureFontsReady } from '@/data/fonts'
+// Static fonts for the PDF (TrueType instead of Type 3): only this page loads them.
+import '@/styles/fonts-print.css'
 import { fitOnePageScale } from '@/lib/fitOnePage'
 import { pdfBaseName } from '@/lib/pdf'
 import { TemplateRenderer } from '@/templates/TemplateRenderer'
@@ -76,7 +78,7 @@ export function PrintPage() {
     void (async () => {
       try {
         await withTimeout(
-          ensureFontsReady([doc.metadata.typography.fontFamily, doc.metadata.typography.headingFamily, doc.metadata.typography.nameFamily]),
+          ensureFontsReady([doc.metadata.typography.fontFamily, doc.metadata.typography.headingFamily, doc.metadata.typography.nameFamily].flatMap((f) => (f ? [f, `${f} Print`] : []))),
           4000,
         )
         await awaitPhoto()
@@ -94,6 +96,11 @@ export function PrintPage() {
           })
         }
         await raf2()
+        if (cancelled) return
+        if (sheetRef.current) {
+          keepTrackedTextOnVariableFonts(sheetRef.current)
+          await document.fonts.ready
+        }
         if (cancelled) return
         // If the resume fits a page (after fit), clamp the sheet to exactly one
         // page and clip — so a hair of sub-pixel overflow can't emit a blank 2nd
@@ -200,4 +207,24 @@ function pageNumberCss(doc: ResumeDocument): string {
 @media print {
   .rm-col-main, .rm-col-aside { padding-bottom: ${Math.max(0, marginMm - footMm)}mm !important; }
 }`
+}
+
+/**
+ * CVPyrites: widely letter-spaced text (spaced-caps headings like "E X P E R I E N C E")
+ * stays on the variable font. With the static TrueType fonts Chrome writes the
+ * spacing as gaps between glyphs, and most PDF text extractors then read it as
+ * "E S P E R I E N Z A"; with the variable font (Type 3 in the PDF) the spacing is
+ * part of each glyph and the word comes out whole. Everything else keeps the
+ * static fonts. Same metrics either way, so the layout doesn't move.
+ */
+function keepTrackedTextOnVariableFonts(root: HTMLElement): void {
+  for (const el of Array.from(root.querySelectorAll<HTMLElement>('*'))) {
+    const cs = getComputedStyle(el)
+    const ls = parseFloat(cs.letterSpacing)
+    // Measured on all templates: spacing up to 0.08em still extracts whole words,
+    // from 0.10em some break up. 0.09em sits between the two.
+    if (!(ls > 0.09 * parseFloat(cs.fontSize))) continue
+    const variable = cs.fontFamily.replace(/"[^"]+ Print",\s*/g, '')
+    if (variable !== cs.fontFamily) el.style.fontFamily = variable
+  }
 }
