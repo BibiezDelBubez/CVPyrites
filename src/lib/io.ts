@@ -22,6 +22,7 @@ import {
   ReferenceSchema,
   ProjectSchema,
   CustomSectionSchema,
+  ClosingStatementSchema,
 } from '@/types/resume'
 import { MetadataSchema } from '@/types/metadata'
 import { defaultMetadata, ensureIds } from '@/data/defaults'
@@ -79,6 +80,9 @@ function parseContentResilient(obj: Record<string, unknown>) {
     references: obj.references ?? [],
     projects: obj.projects ?? [],
     custom: obj.custom ?? [],
+    // CVPyrites: the data-protection declaration (statement, place, date, signature).
+    // It is exported, so it must be read back too — it used to be silently dropped.
+    closingStatement: obj.closingStatement ?? {},
   }
   const whole = ResumeContentSchema.safeParse(input)
   if (whole.success) return whole.data
@@ -98,6 +102,7 @@ function parseContentResilient(obj: Record<string, unknown>) {
     references: salvageArray(ReferenceSchema, obj.references),
     projects: salvageArray(ProjectSchema, obj.projects),
     custom: salvageArray(CustomSectionSchema, obj.custom),
+    closingStatement: ClosingStatementSchema.safeParse(obj.closingStatement).success ? obj.closingStatement : {},
   })
 }
 
@@ -141,6 +146,10 @@ export async function importDocumentFromFile(file: File): Promise<ResumeDocument
   }
   const doc = fromJsonResume(json)
   doc.content.basics.image = await sanitizeImportedImage(doc.content.basics.image)
+  // Same rule as the photo: only an embedded image, never a remote URL. Kept as
+  // is (already downscaled when it was uploaded), so re-imports don't degrade it.
+  const sig = doc.content.closingStatement.signature
+  if (sig && !/^data:image\//i.test(sig)) doc.content.closingStatement.signature = ''
   return doc
 }
 
